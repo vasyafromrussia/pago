@@ -1,7 +1,9 @@
 package io.octo.bear.pago;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -11,8 +13,7 @@ import android.util.Log;
 
 import com.android.vending.billing.IInAppBillingService;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
 
 /**
  * Created by shc on 11.07.16.
@@ -23,10 +24,13 @@ public class BillingActivity extends AppCompatActivity {
 
     public static final int REQUEST_CODE_PURCHASE = 1001;
 
+    private static final String EXTRA_PURCHASE_LISTENER = "io.octo.bear.pago:purchase.listener";
+    private static final String EXTRA_INTENT_SENDER = "io.octo.bear.pago:intent.sender";
+
     private static final String TAG = BillingActivity.class.getSimpleName();
 
     private IInAppBillingService inAppBillingService;
-    private List<PurchaseListener> purchaseListeners = new ArrayList<>();
+    private PurchaseListener purchaseListener;
 
     private final ServiceConnection billingServiceConnection = new ServiceConnection() {
 
@@ -44,13 +48,30 @@ public class BillingActivity extends AppCompatActivity {
 
     };
 
+    public static void start(Context context, PurchaseListener listener, IntentSender intentSender) {
+        final Intent intent = new Intent(context, BillingActivity.class);
+        intent.putExtra(EXTRA_PURCHASE_LISTENER, listener);
+        intent.putExtra(EXTRA_INTENT_SENDER, intentSender);
+        context.startActivity(intent);
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        final Bundle extras = getIntent().getExtras();
+        this.purchaseListener = (PurchaseListener) extras.getSerializable(EXTRA_PURCHASE_LISTENER);
+
         final Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
         serviceIntent.setPackage("com.android.vending");
         bindService(serviceIntent, billingServiceConnection, BIND_AUTO_CREATE);
+
+        try {
+            final IntentSender intentSender = extras.getParcelable(EXTRA_INTENT_SENDER);
+            startIntentSenderForResult(intentSender, BillingActivity.REQUEST_CODE_PURCHASE, new Intent(), 0, 0, 0);
+        } catch (IntentSender.SendIntentException e) {
+            Log.e(TAG, "onCreate: ", e);
+        }
     }
 
     @Override
@@ -62,31 +83,27 @@ public class BillingActivity extends AppCompatActivity {
         }
     }
 
-    public void addPurchaseListener(PurchaseListener listener) {
-        purchaseListeners.add(listener);
-    }
-
-    public void removePurchaseListener(PurchaseListener listener) {
-        purchaseListeners.remove(listener);
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE_PURCHASE) {
-            for (PurchaseListener listener : purchaseListeners) {
-                if (resultCode == RESULT_OK) {
-                    listener.onSuccess(data);
-                } else {
-                    listener.onError();
-                }
+            if (resultCode == RESULT_OK) {
+                purchaseListener.onSuccess(data);
+            } else {
+                purchaseListener.onError();
             }
+            finish();
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+
     }
 
-    public IInAppBillingService getBillingService() {
-        return inAppBillingService;
+    public interface PurchaseListener extends Serializable {
+
+        void onSuccess(Intent result);
+
+        void onError();
+
     }
 
 }

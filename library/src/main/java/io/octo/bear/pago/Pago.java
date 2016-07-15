@@ -1,5 +1,7 @@
 package io.octo.bear.pago;
 
+import android.content.Context;
+
 import com.google.gson.Gson;
 
 import java.util.List;
@@ -21,33 +23,37 @@ public class Pago {
     private static Pago pagoInstance;
     private static Gson gson = new Gson();
 
-    private final BillingActivity billingActivity;
+    private final Context context;
 
-    public static Pago getInstance() {
+    public static Pago getInstance(Context context) {
         if (pagoInstance == null) {
-            pagoInstance = new Pago();
+            pagoInstance = new Pago(context);
         }
         return pagoInstance;
     }
 
-    private Pago() {
-        this.billingActivity = new BillingActivity();
+    private Pago(Context context) {
+        this.context = context;
     }
 
     public Single<List<Sku>> getSkuItemDetails(List<String> skuIds) {
-        return new SkuDetailsObservable(billingActivity, gson, PurchaseType.INAPP, skuIds);
+        return new SkuDetailsObservable(context, PurchaseType.INAPP, skuIds);
     }
 
     public Single<List<Sku>> getSkuSubscriptionDetails(List<String> skuIds) {
-        return new SkuDetailsObservable(billingActivity, gson, PurchaseType.SUBSCRIPTION, skuIds);
+        return new SkuDetailsObservable(context, PurchaseType.SUBSCRIPTION, skuIds);
     }
 
     public Single<Purchase> purchaseProduct(String sku) {
-        return new PurchasingObservable(billingActivity, gson, PurchaseType.INAPP, sku);
+        return new PurchasingObservable(context, PurchaseType.INAPP, sku);
     }
 
     public Single<Purchase> purchaseSubscription(String sku) {
-        return new PurchasingObservable(billingActivity, gson, PurchaseType.SUBSCRIPTION, sku);
+        return new PurchasingObservable(context, PurchaseType.SUBSCRIPTION, sku);
+    }
+
+    public static Gson gson() {
+        return gson;
     }
 
 }
