@@ -7,10 +7,7 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.text.TextUtils;
 
-import com.android.vending.billing.IInAppBillingService;
-
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,56 +32,61 @@ final class BillingServiceHelper {
     private static final String RESPONSE_INAPP_PURCHASE_DATA = "INAPP_PURCHASE_DATA";
     private static final String RESPONSE_INAPP_DATA_SIGNATURE = "INAPP_DATA_SIGNATURE";
 
-    final List<Sku> getSkuDetails(Context context, List<String> purchaseIds, PurchaseType type) throws RemoteException {
-        final Bundle querySku = new Bundle();
-        querySku.putStringArrayList(EXTRA_ITEM_ID_LIST, new ArrayList<>(purchaseIds));
+    final void obtainSkuDetails(
+            final Context context, final List<String> purchaseIds, final PurchaseType type, final ResultSupplier<List<Sku>> listener)
+            throws RemoteException {
 
-        final IInAppBillingService service = getBillingService();
+        new BillingServiceConnection(context, service -> {
+            final Bundle querySku = new Bundle();
+            querySku.putStringArrayList(EXTRA_ITEM_ID_LIST, new ArrayList<>(purchaseIds));
 
-        final Bundle details = service.getSkuDetails(Pago.BILLING_API_VERSION, context.getPackageName(), type.value, querySku);
-        final ResponseCode responseCode = ResponseCode.getByCode(details.getInt(RESPONSE_CODE));
+            final Bundle details = service.getSkuDetails(Pago.BILLING_API_VERSION, context.getPackageName(), type.value, querySku);
+            final ResponseCode responseCode = ResponseCode.getByCode(details.getInt(RESPONSE_CODE));
 
-        if (responseCode == ResponseCode.OK) {
-            final ArrayList<String> skus = details.getStringArrayList(RESPONSE_DETAILS_LIST);
-            if (skus == null) throw new RuntimeException("skus list is not supplied");
+            if (responseCode == ResponseCode.OK) {
+                final ArrayList<String> skus = details.getStringArrayList(RESPONSE_DETAILS_LIST);
+                if (skus == null) throw new RuntimeException("skus list is not supplied");
 
-            final List<Sku> result = new ArrayList<>();
-            for (String serializedSku : skus) {
-                result.add(Pago.gson().fromJson(serializedSku, Sku.class));
+                final List<Sku> result = new ArrayList<>();
+                for (String serializedSku : skus) {
+                    result.add(Pago.gson().fromJson(serializedSku, Sku.class));
+                }
+
+                listener.onSuccess(result);
+            } else {
+                throw new BillingException(responseCode);
             }
-
-            return result;
-        } else {
-            throw new BillingException(responseCode);
-        }
+        }).bindService();
     }
 
     final void purchaseItem(
-            Context context, String sku, PurchaseType type, PurchaseSuccessListener listener) throws RemoteException {
+            final Context context, final String sku, final PurchaseType type, final ResultSupplier<Purchase> listener)
+            throws RemoteException {
 
-        final String payload = UUID.randomUUID().toString();
-        final IInAppBillingService billingService = getBillingService();
+        new BillingServiceConnection(context, service -> {
+            final String payload = UUID.randomUUID().toString();
+            final Bundle buyIntentBundle = service.getBuyIntent(Pago.BILLING_API_VERSION, context.getPackageName(),
+                    sku, type.value, payload);
 
-        final Bundle buyIntentBundle = billingService.getBuyIntent(Pago.BILLING_API_VERSION, context.getPackageName(),
-                sku, type.value, payload);
+            final ResponseCode responseCode = ResponseCode.getByCode(buyIntentBundle.getInt(RESPONSE_CODE));
 
-        final ResponseCode responseCode = ResponseCode.getByCode(buyIntentBundle.getInt(RESPONSE_CODE));
+            if (responseCode != ResponseCode.OK) {
+                throw new BillingException(responseCode);
+            }
 
-        if (responseCode != ResponseCode.OK) {
-            throw new BillingException(responseCode);
-        }
+            final PendingIntent buyIntent = buyIntentBundle.getParcelable(RESPONSE_BUY_INTENT);
+            if (buyIntent == null) {
+                throw new RuntimeException("unable to retrieve buy intent");
+            }
 
-        final PendingIntent buyIntent = buyIntentBundle.getParcelable(RESPONSE_BUY_INTENT);
-        if (buyIntent == null) {
-            throw new RuntimeException("unable to retrieve buy intent");
-        }
+            final BillingActivity.PurchaseListener purchaseListener = getPurchaseListener(payload, listener);
 
-        final BillingActivity.PurchaseListener purchaseListener = getPurchaseListener(payload, listener);
+            BillingActivity.start(context, purchaseListener, buyIntent.getIntentSender());
+        }).bindService();
 
-        BillingActivity.start(context, purchaseListener, buyIntent.getIntentSender());
     }
 
-    private BillingActivity.PurchaseListener getPurchaseListener(final String payload, final PurchaseSuccessListener listener) {
+    private BillingActivity.PurchaseListener getPurchaseListener(final String payload, final ResultSupplier<Purchase> listener) {
         return new BillingActivity.PurchaseListener() {
             @Override
             public void onSuccess(Intent result) {
@@ -111,8 +113,8 @@ final class BillingServiceHelper {
         };
     }
 
-    interface PurchaseSuccessListener {
-        void onSuccess(Purchase purchase);
+    interface ResultSupplier<T> {
+        void onSuccess(T result);
     }
 
 }
