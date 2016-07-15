@@ -20,23 +20,14 @@ public class Pago {
 
     public static final int BILLING_API_VERSION = 3;
 
-    private static Pago pagoInstance;
     private static Gson gson = new Gson();
-
     private final Context context;
-
-    public static Pago getInstance(Context context) {
-        if (pagoInstance == null) {
-            pagoInstance = new Pago(context);
-        }
-        return pagoInstance;
-    }
 
     private Pago(Context context) {
         this.context = context;
     }
 
-    public Single<List<Sku>> getSkuItemDetails(List<String> skuIds) {
+    public Single<List<Sku>> getSkuProductsDetails(List<String> skuIds) {
         return new SkuDetailsObservable(context, PurchaseType.INAPP, skuIds);
     }
 
