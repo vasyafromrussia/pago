@@ -18,8 +18,7 @@ public class SkuDetailsObservable extends Single<List<Sku>> {
     public SkuDetailsObservable(final Context context, final PurchaseType type, final List<String> purchaseIds) {
         super(subscriber -> {
             try {
-                final BillingServiceHelper billingServiceHelper = new BillingServiceHelper();
-                billingServiceHelper.obtainSkuDetails(context, purchaseIds, type, subscriber::onSuccess);
+                BillingServiceHelper.obtainSkuDetails(context, purchaseIds, type, subscriber::onSuccess);
             } catch (RemoteException e) {
                 subscriber.onError(e);
             }

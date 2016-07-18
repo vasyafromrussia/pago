@@ -8,7 +8,10 @@ import java.util.List;
 
 import io.octo.bear.pago.model.entity.Purchase;
 import io.octo.bear.pago.model.entity.PurchaseType;
+import io.octo.bear.pago.model.entity.PurchasedItem;
 import io.octo.bear.pago.model.entity.Sku;
+import io.octo.bear.pago.model.service.ConsumePurchaseObservable;
+import io.octo.bear.pago.model.service.PurchasedItemsObservable;
 import io.octo.bear.pago.model.service.PurchasingObservable;
 import io.octo.bear.pago.model.service.SkuDetailsObservable;
 import rx.Single;
@@ -23,24 +26,36 @@ public class Pago {
     private static Gson gson = new Gson();
     private final Context context;
 
-    private Pago(Context context) {
+    public Pago(Context context) {
         this.context = context;
     }
 
-    public Single<List<Sku>> getSkuProductsDetails(List<String> skuIds) {
+    public Single<List<Sku>> getSkuProductsDetails(final List<String> skuIds) {
         return new SkuDetailsObservable(context, PurchaseType.INAPP, skuIds);
     }
 
-    public Single<List<Sku>> getSkuSubscriptionDetails(List<String> skuIds) {
+    public Single<List<Sku>> getSkuSubscriptionDetails(final List<String> skuIds) {
         return new SkuDetailsObservable(context, PurchaseType.SUBSCRIPTION, skuIds);
     }
 
-    public Single<Purchase> purchaseProduct(String sku) {
+    public Single<Purchase> purchaseProduct(final String sku) {
         return new PurchasingObservable(context, PurchaseType.INAPP, sku);
     }
 
-    public Single<Purchase> purchaseSubscription(String sku) {
+    public Single<Purchase> purchaseSubscription(final String sku) {
         return new PurchasingObservable(context, PurchaseType.SUBSCRIPTION, sku);
+    }
+
+    public Single<List<PurchasedItem>> getPurchasedProducts() {
+        return new PurchasedItemsObservable(context, PurchaseType.INAPP);
+    }
+
+    public Single<List<PurchasedItem>> getPurchasedSubscriptions() {
+        return new PurchasedItemsObservable(context, PurchaseType.SUBSCRIPTION);
+    }
+
+    public Single<Void> consumeProduct(final String purchaseToken) {
+        return new ConsumePurchaseObservable(context, purchaseToken);
     }
 
     public static Gson gson() {

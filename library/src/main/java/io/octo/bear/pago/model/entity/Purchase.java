@@ -30,4 +30,17 @@ public class Purchase {
         this.developerPayload = developerPayload;
         this.purchaseToken = purchaseToken;
     }
+
+    @Override
+    public String toString() {
+        return "Purchase{" +
+                "orderId='" + orderId + '\'' +
+                ", packageName='" + packageName + '\'' +
+                ", productId='" + productId + '\'' +
+                ", purchaseTime=" + purchaseTime +
+                ", purchaseState=" + purchaseState +
+                ", developerPayload='" + developerPayload + '\'' +
+                ", purchaseToken='" + purchaseToken + '\'' +
+                '}';
+    }
 }

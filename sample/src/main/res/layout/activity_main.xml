@@ -1,20 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    android:id="@+id/activity_main"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="16dp"
     tools:context="io.octo.bear.sample.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <Button
+        android:id="@+id/purchased"
+        android:layout_width="350dp"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="@+id/activity_main"
-        app:layout_constraintLeft_toLeftOf="@+id/activity_main"
-        app:layout_constraintRight_toRightOf="@+id/activity_main"
-        app:layout_constraintTop_toTopOf="@+id/activity_main"/>
+        android:text="Purchased" />
 
-</android.support.constraint.ConstraintLayout>
+    <Button
+        android:id="@+id/canceled"
+        android:layout_width="350dp"
+        android:layout_height="wrap_content"
+        android:text="Canceled" />
+
+    <Button
+        android:id="@+id/refunded"
+        android:layout_width="350dp"
+        android:layout_height="wrap_content"
+        android:text="Refunded" />
+
+    <Button
+        android:id="@+id/unavailable"
+        android:layout_width="350dp"
+        android:layout_height="wrap_content"
+        android:text="Unavailable" />
+
+</LinearLayout>
