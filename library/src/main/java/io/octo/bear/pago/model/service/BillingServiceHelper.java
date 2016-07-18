@@ -22,6 +22,7 @@ import io.octo.bear.pago.model.entity.PurchasedItem;
 import io.octo.bear.pago.model.entity.ResponseCode;
 import io.octo.bear.pago.model.entity.Sku;
 import io.octo.bear.pago.model.exception.BillingException;
+import rx.Completable;
 import rx.SingleSubscriber;
 
 /**
@@ -138,7 +139,7 @@ final class BillingServiceHelper {
     }
 
     static void consumePurchase(
-            final Context context, final String purchaseToken, final SingleSubscriber<? super Void> subscriber) {
+            final Context context, final String purchaseToken, final Completable.CompletableSubscriber subscriber) {
 
         new BillingServiceConnection(context, service -> {
             try {
@@ -147,7 +148,7 @@ final class BillingServiceHelper {
 
                 checkResponseAndThrowIfError(code);
 
-                subscriber.onSuccess(null);
+                subscriber.onCompleted();
             } catch (BillingException e) {
                 subscriber.onError(e);
             }
