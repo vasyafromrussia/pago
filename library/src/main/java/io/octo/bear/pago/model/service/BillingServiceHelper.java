@@ -22,6 +22,7 @@ import io.octo.bear.pago.model.entity.PurchasedItem;
 import io.octo.bear.pago.model.entity.ResponseCode;
 import io.octo.bear.pago.model.entity.Sku;
 import io.octo.bear.pago.model.exception.BillingException;
+import rx.SingleSubscriber;
 
 /**
  * Created by shc on 15.07.16.
@@ -45,98 +46,111 @@ final class BillingServiceHelper {
     private static final String RESPONSE_INAPP_CONTINUATION_TOKEN = "INAPP_CONTINUATION_TOKEN";
 
     static void obtainSkuDetails(
-            final Context context, final List<String> purchaseIds, final PurchaseType type, final ResultSupplier<List<Sku>> listener)
-            throws RemoteException {
+            final Context context, final List<String> purchaseIds, final PurchaseType type, final SingleSubscriber<? super List<Sku>> subscriber) {
 
         new BillingServiceConnection(context, service -> {
-            final Bundle querySku = new Bundle();
-            querySku.putStringArrayList(EXTRA_ITEM_ID_LIST, new ArrayList<>(purchaseIds));
+            try {
+                final Bundle querySku = new Bundle();
+                querySku.putStringArrayList(EXTRA_ITEM_ID_LIST, new ArrayList<>(purchaseIds));
 
-            final Bundle details = service.getSkuDetails(Pago.BILLING_API_VERSION, context.getPackageName(), type.value, querySku);
-            final ResponseCode responseCode = retrieveResponseCode(details);
+                final Bundle details = service.getSkuDetails(Pago.BILLING_API_VERSION, context.getPackageName(), type.value, querySku);
+                final ResponseCode responseCode = retrieveResponseCode(details);
 
-            checkResponseAndThrowIfError(responseCode);
+                checkResponseAndThrowIfError(responseCode);
 
-            final ArrayList<String> skus = details.getStringArrayList(RESPONSE_DETAILS_LIST);
-            if (skus == null) throw new RuntimeException("skus list is not supplied");
+                final ArrayList<String> skus = details.getStringArrayList(RESPONSE_DETAILS_LIST);
+                if (skus == null) throw new RuntimeException("skus list is not supplied");
 
-            final List<Sku> result = new ArrayList<>();
-            for (String serializedSku : skus) {
-                result.add(Pago.gson().fromJson(serializedSku, Sku.class));
+                final List<Sku> result = new ArrayList<>();
+                for (String serializedSku : skus) {
+                    result.add(Pago.gson().fromJson(serializedSku, Sku.class));
+                }
+
+                subscriber.onSuccess(result);
+            } catch (RemoteException | BillingException e) {
+                subscriber.onError(e);
             }
-
-            listener.onSuccess(result);
         }).bindService();
     }
 
     static void purchaseItem(
-            final Context context, final String sku, final PurchaseType type, final ResultSupplier<Purchase> listener)
-            throws RemoteException {
+            final Context context, final String sku, final PurchaseType type, final SingleSubscriber<? super Purchase> subscriber) {
 
         new BillingServiceConnection(context, service -> {
-            final String payload = UUID.randomUUID().toString();
-            final Bundle buyIntentBundle = service.getBuyIntent(Pago.BILLING_API_VERSION, context.getPackageName(),
-                    sku, type.value, payload);
+            try {
+                final String payload = UUID.randomUUID().toString();
+                final Bundle buyIntentBundle = service.getBuyIntent(Pago.BILLING_API_VERSION, context.getPackageName(),
+                        sku, type.value, payload);
 
-            final ResponseCode responseCode = retrieveResponseCode(buyIntentBundle);
+                final ResponseCode responseCode = retrieveResponseCode(buyIntentBundle);
 
-            checkResponseAndThrowIfError(responseCode);
+                checkResponseAndThrowIfError(responseCode);
 
-            final PendingIntent buyIntent = buyIntentBundle.getParcelable(RESPONSE_BUY_INTENT);
-            if (buyIntent == null) {
-                throw new RuntimeException("unable to retrieve buy intent");
+                final PendingIntent buyIntent = buyIntentBundle.getParcelable(RESPONSE_BUY_INTENT);
+                if (buyIntent == null) {
+                    throw new RuntimeException("unable to retrieve buy intent");
+                }
+
+                LocalBroadcastManager
+                        .getInstance(context)
+                        .registerReceiver(
+                                createPurchaseBroadcastReceiver(payload, subscriber),
+                                new IntentFilter(BillingActivity.ACTION_PURCHASE_SUCCESS));
+
+                BillingActivity.start(context, buyIntent);
+            } catch (BillingException e) {
+                subscriber.onError(e);
             }
-
-            LocalBroadcastManager
-                    .getInstance(context)
-                    .registerReceiver(
-                            createPurchaseBroadcastReceiver(payload, listener),
-                            new IntentFilter(BillingActivity.ACTION_PURCHASE_SUCCESS));
-
-            BillingActivity.start(context, buyIntent);
 
         }).bindService();
     }
 
     // TODO: 18.07.16 use continuation token
     static void obtainPurchasedItems(
-            final Context context, final PurchaseType purchaseType, final ResultSupplier<List<PurchasedItem>> listener) {
+            final Context context, final PurchaseType purchaseType, final SingleSubscriber<? super List<PurchasedItem>> subscriber) {
 
         new BillingServiceConnection(context, service -> {
-            final Bundle purchases =
-                    service.getPurchases(Pago.BILLING_API_VERSION, context.getPackageName(), purchaseType.value, null);
+            try {
+                final Bundle purchases =
+                        service.getPurchases(Pago.BILLING_API_VERSION, context.getPackageName(), purchaseType.value, null);
 
-            final ResponseCode code = retrieveResponseCode(purchases);
+                final ResponseCode code = retrieveResponseCode(purchases);
 
-            checkResponseAndThrowIfError(code);
+                checkResponseAndThrowIfError(code);
 
-            final List<PurchasedItem> result = new ArrayList<>();
+                final List<PurchasedItem> result = new ArrayList<>();
 
-            final List<String> data = purchases.getStringArrayList(RESPONSE_INAPP_PURCHASE_DATA_LIST);
-            final List<String> skus = purchases.getStringArrayList(RESPONSE_INAPP_PURCHASE_ITEM_LIST);
-            final List<String> signatures = purchases.getStringArrayList(RESPONSE_INAPP_PURCHASE_SIGNATURE_LIST);
+                final List<String> data = purchases.getStringArrayList(RESPONSE_INAPP_PURCHASE_DATA_LIST);
+                final List<String> skus = purchases.getStringArrayList(RESPONSE_INAPP_PURCHASE_ITEM_LIST);
+                final List<String> signatures = purchases.getStringArrayList(RESPONSE_INAPP_PURCHASE_SIGNATURE_LIST);
 
-            for (int i = 0; i < data.size(); i++) {
-                result.add(new PurchasedItem(
-                        Pago.gson().fromJson(data.get(i), Purchase.class),
-                        signatures.get(i),
-                        skus.get(i)));
+                for (int i = 0; i < data.size(); i++) {
+                    result.add(new PurchasedItem(
+                            Pago.gson().fromJson(data.get(i), Purchase.class),
+                            signatures.get(i),
+                            skus.get(i)));
+                }
+                subscriber.onSuccess(result);
+            } catch (BillingException e) {
+                subscriber.onError(e);
             }
-            listener.onSuccess(result);
-
         }).bindService();
     }
 
     static void consumePurchase(
-            final Context context, final String purchaseToken, final ResultSupplier<Void> listener) {
+            final Context context, final String purchaseToken, final SingleSubscriber<? super Void> subscriber) {
 
         new BillingServiceConnection(context, service -> {
-            final int codeNumber = service.consumePurchase(Pago.BILLING_API_VERSION, context.getPackageName(), purchaseToken);
-            final ResponseCode code = ResponseCode.getByCode(codeNumber);
+            try {
+                final int codeNumber = service.consumePurchase(Pago.BILLING_API_VERSION, context.getPackageName(), purchaseToken);
+                final ResponseCode code = ResponseCode.getByCode(codeNumber);
 
-            checkResponseAndThrowIfError(code);
+                checkResponseAndThrowIfError(code);
 
-            listener.onSuccess(null);
+                subscriber.onSuccess(null);
+            } catch (BillingException e) {
+                subscriber.onError(e);
+            }
         }).bindService();
     }
 
@@ -144,30 +158,34 @@ final class BillingServiceHelper {
         return ResponseCode.getByCode(result.getInt(RESPONSE_CODE));
     }
 
-    private static void checkResponseAndThrowIfError(ResponseCode code) {
+    private static void checkResponseAndThrowIfError(ResponseCode code) throws BillingException {
         if (code != ResponseCode.OK) throw new BillingException(code);
     }
 
     private static BroadcastReceiver createPurchaseBroadcastReceiver
-            (final String payload, final ResultSupplier<Purchase> listener) {
+            (final String payload, final SingleSubscriber<? super Purchase> subscriber) {
 
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent data) {
-                LocalBroadcastManager.getInstance(context).unregisterReceiver(this);
+                try {
+                    LocalBroadcastManager.getInstance(context).unregisterReceiver(this);
 
-                final Bundle result = data.getExtras();
-                final ResponseCode code = retrieveResponseCode(result);
+                    final Bundle result = data.getExtras();
+                    final ResponseCode code = retrieveResponseCode(result);
 
-                checkResponseAndThrowIfError(code);
+                    checkResponseAndThrowIfError(code);
 
-                final Purchase purchase = Pago.gson().fromJson(result.getString(RESPONSE_INAPP_PURCHASE_DATA), Purchase.class);
-                final boolean purchaseDataIsCorrect = TextUtils.equals(payload, purchase.developerPayload);
+                    final Purchase purchase = Pago.gson().fromJson(result.getString(RESPONSE_INAPP_PURCHASE_DATA), Purchase.class);
+                    final boolean purchaseDataIsCorrect = TextUtils.equals(payload, purchase.developerPayload);
 
-                if (purchaseDataIsCorrect) {
-                    listener.onSuccess(purchase);
-                } else {
-                    throw new RuntimeException("purchase data doesn't match with data that was sent in request");
+                    if (purchaseDataIsCorrect) {
+                        subscriber.onSuccess(purchase);
+                    } else {
+                        throw new RuntimeException("purchase data doesn't match with data that was sent in request");
+                    }
+                } catch (BillingException e) {
+                    subscriber.onError(e);
                 }
             }
         };

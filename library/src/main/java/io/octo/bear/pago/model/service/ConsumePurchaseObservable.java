@@ -11,13 +11,7 @@ import rx.Single;
 public class ConsumePurchaseObservable extends Single<Void> {
 
     public ConsumePurchaseObservable(final Context context, final String purchaseToken) {
-        super(subscriber -> {
-            try {
-                BillingServiceHelper.consumePurchase(context, purchaseToken, subscriber::onSuccess);
-            } catch (Throwable e) {
-                subscriber.onError(e);
-            }
-        });
+        super(subscriber -> BillingServiceHelper.consumePurchase(context, purchaseToken, subscriber));
     }
 
 }

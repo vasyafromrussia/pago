@@ -6,7 +6,7 @@ import io.octo.bear.pago.model.entity.ResponseCode;
  * Created by shc on 14.07.16.
  */
 
-public class BillingException extends RuntimeException {
+public class BillingException extends Throwable {
 
     public BillingException(int code) {
         this(ResponseCode.getByCode(code));

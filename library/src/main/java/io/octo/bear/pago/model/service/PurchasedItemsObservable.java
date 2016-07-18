@@ -15,13 +15,7 @@ import rx.Single;
 public class PurchasedItemsObservable extends Single<List<PurchasedItem>> {
 
     public PurchasedItemsObservable(final Context context, final PurchaseType type) {
-        super(subscriber -> {
-            try {
-                BillingServiceHelper.obtainPurchasedItems(context, type, subscriber::onSuccess);
-            } catch (Throwable e) {
-                subscriber.onError(e);
-            }
-        });
+        super(subscriber -> BillingServiceHelper.obtainPurchasedItems(context, type, subscriber));
     }
 
 }

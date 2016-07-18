@@ -1,7 +1,6 @@
 package io.octo.bear.pago.model.service;
 
 import android.content.Context;
-import android.os.RemoteException;
 
 import java.util.List;
 
@@ -16,13 +15,7 @@ import rx.Single;
 public class SkuDetailsObservable extends Single<List<Sku>> {
 
     public SkuDetailsObservable(final Context context, final PurchaseType type, final List<String> purchaseIds) {
-        super(subscriber -> {
-            try {
-                BillingServiceHelper.obtainSkuDetails(context, purchaseIds, type, subscriber::onSuccess);
-            } catch (RemoteException e) {
-                subscriber.onError(e);
-            }
-        });
+        super(subscriber -> BillingServiceHelper.obtainSkuDetails(context, purchaseIds, type, subscriber));
     }
 
 }
