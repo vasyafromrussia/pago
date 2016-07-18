@@ -1,6 +1,7 @@
 package io.octo.bear.sample;
 
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Button;
@@ -8,7 +9,7 @@ import android.widget.Button;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.octo.bear.pago.Pago;
-import io.octo.bear.pago.model.entity.PurchasedItem;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
@@ -45,19 +46,41 @@ public class MainActivity extends AppCompatActivity {
         purchased.setOnClickListener(view ->
                 pago.purchaseProduct(ITEM_PURCHASED)
                         .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
-                                purchase -> Log.d(TAG, "purchase success: " + purchase),
-                                throwable -> Log.e(TAG, "error: ", throwable)
+                                purchase -> showSuccessDialog("Purchased successfully: " + purchase.productId),
+                                this::showErrorDialog
                         ));
 
         canceled.setOnClickListener(view ->
                 pago.consumeProduct("inapp:io.octo.bear.pago:android.test.purchased")
                         .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
-                                result -> Log.d(TAG, "purchase consumed"),
-                                e -> Log.e(TAG, "error", e)
+                                result -> showSuccessDialog("Purchase consumed successfully"),
+                                this::showErrorDialog
                         ));
 
+    }
+
+    private void showErrorDialog(Throwable error) {
+        new AlertDialog
+                .Builder(this)
+                .setTitle("Error")
+                .setMessage(error.getMessage())
+                .setNegativeButton("Okay :(", (dialogInterface, i) -> dialogInterface.dismiss())
+                .create()
+                .show();
+    }
+
+    private void showSuccessDialog(String message) {
+        new AlertDialog
+                .Builder(this)
+                .setTitle("Success")
+                .setMessage(message)
+                .setPositiveButton("Ok", (dialogInterface, i) -> dialogInterface.dismiss())
+                .create()
+                .show();
     }
 
 }

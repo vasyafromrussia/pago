@@ -53,6 +53,7 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha4'
 
     compile 'io.reactivex:rxjava:1.1.6'
+    compile 'io.reactivex:rxandroid:1.2.1'
 
     compile 'com.jakewharton:butterknife:8.2.1'
     apt 'com.jakewharton:butterknife-compiler:8.2.1'
