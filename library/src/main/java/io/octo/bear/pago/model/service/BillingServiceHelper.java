@@ -1,17 +1,20 @@
 package io.octo.bear.pago.model.service;
 
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import io.octo.bear.pago.BillingActivity;
 import io.octo.bear.pago.Pago;
 import io.octo.bear.pago.model.entity.Purchase;
 import io.octo.bear.pago.model.entity.PurchaseType;
@@ -24,6 +27,8 @@ import io.octo.bear.pago.model.exception.BillingException;
  * Created by shc on 15.07.16.
  */
 final class BillingServiceHelper {
+
+    private static final String TAG = BillingServiceHelper.class.getSimpleName();
 
     private static final String EXTRA_ITEM_ID_LIST = "ITEM_ID_LIST";
 
@@ -48,21 +53,19 @@ final class BillingServiceHelper {
             querySku.putStringArrayList(EXTRA_ITEM_ID_LIST, new ArrayList<>(purchaseIds));
 
             final Bundle details = service.getSkuDetails(Pago.BILLING_API_VERSION, context.getPackageName(), type.value, querySku);
-            final ResponseCode responseCode = ResponseCode.getByCode(details.getInt(RESPONSE_CODE));
+            final ResponseCode responseCode = retrieveResponseCode(details);
 
-            if (responseCode == ResponseCode.OK) {
-                final ArrayList<String> skus = details.getStringArrayList(RESPONSE_DETAILS_LIST);
-                if (skus == null) throw new RuntimeException("skus list is not supplied");
+            checkResponseAndThrowIfError(responseCode);
 
-                final List<Sku> result = new ArrayList<>();
-                for (String serializedSku : skus) {
-                    result.add(Pago.gson().fromJson(serializedSku, Sku.class));
-                }
+            final ArrayList<String> skus = details.getStringArrayList(RESPONSE_DETAILS_LIST);
+            if (skus == null) throw new RuntimeException("skus list is not supplied");
 
-                listener.onSuccess(result);
-            } else {
-                throw new BillingException(responseCode);
+            final List<Sku> result = new ArrayList<>();
+            for (String serializedSku : skus) {
+                result.add(Pago.gson().fromJson(serializedSku, Sku.class));
             }
+
+            listener.onSuccess(result);
         }).bindService();
     }
 
@@ -75,39 +78,23 @@ final class BillingServiceHelper {
             final Bundle buyIntentBundle = service.getBuyIntent(Pago.BILLING_API_VERSION, context.getPackageName(),
                     sku, type.value, payload);
 
-            final ResponseCode responseCode = ResponseCode.getByCode(buyIntentBundle.getInt(RESPONSE_CODE));
+            final ResponseCode responseCode = retrieveResponseCode(buyIntentBundle);
 
-            if (responseCode != ResponseCode.OK) {
-                throw new BillingException(responseCode);
-            }
+            checkResponseAndThrowIfError(responseCode);
 
             final PendingIntent buyIntent = buyIntentBundle.getParcelable(RESPONSE_BUY_INTENT);
             if (buyIntent == null) {
                 throw new RuntimeException("unable to retrieve buy intent");
             }
 
-            final IntentSender intentSender = buyIntent.getIntentSender();
-            try {
-                intentSender.sendIntent(context, 1001, new Intent(),
-                        (sender, intent, i, s, result) -> {
-                            final ResponseCode code = ResponseCode.getByCode(result.getInt(RESPONSE_CODE, 0));
+            LocalBroadcastManager
+                    .getInstance(context)
+                    .registerReceiver(
+                            createPurchaseBroadcastReceiver(payload, listener),
+                            new IntentFilter(BillingActivity.ACTION_PURCHASE_SUCCESS));
 
-                            if (code == ResponseCode.OK) {
-                                final Purchase purchase = Pago.gson().fromJson(result.getString(RESPONSE_INAPP_PURCHASE_DATA), Purchase.class);
-                                final boolean purchaseDataIsCorrect = TextUtils.equals(payload, purchase.developerPayload);
+            BillingActivity.start(context, buyIntent);
 
-                                if (purchaseDataIsCorrect) {
-                                    listener.onSuccess(purchase);
-                                } else {
-                                    throw new RuntimeException("purchase data doesn't match with data that was sent in request");
-                                }
-                            } else {
-                                throw new BillingException(code);
-                            }
-                        }, null);
-            } catch (IntentSender.SendIntentException e) {
-                e.printStackTrace();
-            }
         }).bindService();
     }
 
@@ -119,17 +106,16 @@ final class BillingServiceHelper {
             final Bundle purchases =
                     service.getPurchases(Pago.BILLING_API_VERSION, context.getPackageName(), purchaseType.value, null);
 
-            final ResponseCode code = ResponseCode.getByCode(purchases.getInt(RESPONSE_CODE));
+            final ResponseCode code = retrieveResponseCode(purchases);
 
-            if (code != ResponseCode.OK) {
-                throw new BillingException(code);
-            }
+            checkResponseAndThrowIfError(code);
+
+            final List<PurchasedItem> result = new ArrayList<>();
 
             final List<String> data = purchases.getStringArrayList(RESPONSE_INAPP_PURCHASE_DATA_LIST);
             final List<String> skus = purchases.getStringArrayList(RESPONSE_INAPP_PURCHASE_ITEM_LIST);
             final List<String> signatures = purchases.getStringArrayList(RESPONSE_INAPP_PURCHASE_SIGNATURE_LIST);
 
-            final List<PurchasedItem> result = new ArrayList<>();
             for (int i = 0; i < data.size(); i++) {
                 result.add(new PurchasedItem(
                         Pago.gson().fromJson(data.get(i), Purchase.class),
@@ -148,16 +134,43 @@ final class BillingServiceHelper {
             final int codeNumber = service.consumePurchase(Pago.BILLING_API_VERSION, context.getPackageName(), purchaseToken);
             final ResponseCode code = ResponseCode.getByCode(codeNumber);
 
-            if (code == ResponseCode.OK) {
-                listener.onSuccess(null);
-            } else {
-                throw new BillingException(code);
-            }
+            checkResponseAndThrowIfError(code);
+
+            listener.onSuccess(null);
         }).bindService();
     }
 
-    interface ResultSupplier<T> {
-        void onSuccess(T result);
+    private static ResponseCode retrieveResponseCode(final Bundle result) {
+        return ResponseCode.getByCode(result.getInt(RESPONSE_CODE));
+    }
+
+    private static void checkResponseAndThrowIfError(ResponseCode code) {
+        if (code != ResponseCode.OK) throw new BillingException(code);
+    }
+
+    private static BroadcastReceiver createPurchaseBroadcastReceiver
+            (final String payload, final ResultSupplier<Purchase> listener) {
+
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent data) {
+                LocalBroadcastManager.getInstance(context).unregisterReceiver(this);
+
+                final Bundle result = data.getExtras();
+                final ResponseCode code = retrieveResponseCode(result);
+
+                checkResponseAndThrowIfError(code);
+
+                final Purchase purchase = Pago.gson().fromJson(result.getString(RESPONSE_INAPP_PURCHASE_DATA), Purchase.class);
+                final boolean purchaseDataIsCorrect = TextUtils.equals(payload, purchase.developerPayload);
+
+                if (purchaseDataIsCorrect) {
+                    listener.onSuccess(purchase);
+                } else {
+                    throw new RuntimeException("purchase data doesn't match with data that was sent in request");
+                }
+            }
+        };
     }
 
 }
