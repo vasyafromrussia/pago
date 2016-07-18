@@ -14,6 +14,7 @@ import io.octo.bear.pago.model.service.ConsumePurchaseObservable;
 import io.octo.bear.pago.model.service.PurchasedItemsObservable;
 import io.octo.bear.pago.model.service.PurchasingObservable;
 import io.octo.bear.pago.model.service.SkuDetailsObservable;
+import rx.Completable;
 import rx.Single;
 
 /**
@@ -54,7 +55,7 @@ public class Pago {
         return new PurchasedItemsObservable(context, PurchaseType.SUBSCRIPTION);
     }
 
-    public Single<Void> consumeProduct(final String purchaseToken) {
+    public Completable consumeProduct(final String purchaseToken) {
         return new ConsumePurchaseObservable(context, purchaseToken);
     }
 
