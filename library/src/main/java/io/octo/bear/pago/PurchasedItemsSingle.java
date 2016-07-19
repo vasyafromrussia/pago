@@ -1,4 +1,4 @@
-package io.octo.bear.pago.model.service;
+package io.octo.bear.pago;
 
 import android.content.Context;
 
@@ -12,9 +12,9 @@ import rx.Single;
  * Created by shc on 18.07.16.
  */
 
-public class PurchasedItemsObservable extends Single<List<PurchasedItem>> {
+class PurchasedItemsSingle extends Single<List<PurchasedItem>> {
 
-    public PurchasedItemsObservable(final Context context, final PurchaseType type) {
+    PurchasedItemsSingle(final Context context, final PurchaseType type) {
         super(subscriber -> BillingServiceHelper.obtainPurchasedItems(context, type, subscriber));
     }
 

@@ -1,4 +1,4 @@
-package io.octo.bear.pago.model.service;
+package io.octo.bear.pago;
 
 import android.content.ComponentName;
 import android.content.Context;

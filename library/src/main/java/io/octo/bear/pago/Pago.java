@@ -10,11 +10,6 @@ import io.octo.bear.pago.model.entity.Order;
 import io.octo.bear.pago.model.entity.PurchaseType;
 import io.octo.bear.pago.model.entity.PurchasedItem;
 import io.octo.bear.pago.model.entity.Sku;
-import io.octo.bear.pago.model.service.BillingAvailabiliyObservable;
-import io.octo.bear.pago.model.service.ConsumePurchaseObservable;
-import io.octo.bear.pago.model.service.PurchasedItemsObservable;
-import io.octo.bear.pago.model.service.PurchasingObservable;
-import io.octo.bear.pago.model.service.SkuDetailsObservable;
 import rx.Completable;
 import rx.Single;
 
@@ -33,39 +28,39 @@ public class Pago {
     }
 
     public Single<Boolean> checkPurchasesAvailability() {
-        return new BillingAvailabiliyObservable(context, PurchaseType.INAPP);
+        return new BillingAvailabilitySingle(context, PurchaseType.INAPP);
     }
 
     public Single<Boolean> checkSubscriptionAvailability() {
-        return new BillingAvailabiliyObservable(context, PurchaseType.SUBSCRIPTION);
+        return new BillingAvailabilitySingle(context, PurchaseType.SUBSCRIPTION);
     }
 
-    public Single<List<Sku>> getSkuProductsDetails(final List<String> skuIds) {
-        return new SkuDetailsObservable(context, PurchaseType.INAPP, skuIds);
+    public Single<List<Sku>> getProductsDetails(final List<String> skus) {
+        return new ProductDetailsSingle(context, PurchaseType.INAPP, skus);
     }
 
-    public Single<List<Sku>> getSkuSubscriptionDetails(final List<String> skuIds) {
-        return new SkuDetailsObservable(context, PurchaseType.SUBSCRIPTION, skuIds);
+    public Single<List<Sku>> getSSubscriptionsDetails(final List<String> skus) {
+        return new ProductDetailsSingle(context, PurchaseType.SUBSCRIPTION, skus);
     }
 
     public Single<Order> purchaseProduct(final String sku, final String payload) {
-        return new PurchasingObservable(context, PurchaseType.INAPP, sku, payload);
+        return new PerformPurchaseSingle(context, PurchaseType.INAPP, sku, payload);
     }
 
     public Single<Order> purchaseSubscription(final String sku, final String payload) {
-        return new PurchasingObservable(context, PurchaseType.SUBSCRIPTION, sku, payload);
+        return new PerformPurchaseSingle(context, PurchaseType.SUBSCRIPTION, sku, payload);
     }
 
-    public Single<List<PurchasedItem>> getPurchasedProducts() {
-        return new PurchasedItemsObservable(context, PurchaseType.INAPP);
+    public Single<List<PurchasedItem>> obtainPurchasedProducts() {
+        return new PurchasedItemsSingle(context, PurchaseType.INAPP);
     }
 
-    public Single<List<PurchasedItem>> getPurchasedSubscriptions() {
-        return new PurchasedItemsObservable(context, PurchaseType.SUBSCRIPTION);
+    public Single<List<PurchasedItem>> obtainPurchasedSubscriptions() {
+        return new PurchasedItemsSingle(context, PurchaseType.SUBSCRIPTION);
     }
 
     public Completable consumeProduct(final String purchaseToken) {
-        return new ConsumePurchaseObservable(context, purchaseToken);
+        return new ConsumePurchaseCompletable(context, purchaseToken);
     }
 
     public static Gson gson() {

@@ -20,13 +20,13 @@ public class BillingActivity extends Activity {
 
     private static final String TAG = BillingActivity.class.getSimpleName();
 
-    public static final String ACTION_PURCHASE_SUCCESS = "io.octo.bear.pago.broadcast:purchase_success";
+    static final String ACTION_PURCHASE_SUCCESS = "io.octo.bear.pago.broadcast:purchase_success";
 
     private static final int REQUEST_CODE = 1001;
 
     private static final String EXTRA_BUY_INTENT = "extra.buy_intent";
 
-    public static void start(@NonNull final Context context, @NonNull final PendingIntent buyIntent) {
+    static void start(@NonNull final Context context, @NonNull final PendingIntent buyIntent) {
         final Intent intent = new Intent(context, BillingActivity.class);
         intent.putExtra(EXTRA_BUY_INTENT, buyIntent);
         intent.setFlags(FLAG_ACTIVITY_NEW_TASK);

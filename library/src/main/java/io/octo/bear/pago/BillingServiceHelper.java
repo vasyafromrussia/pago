@@ -1,4 +1,4 @@
-package io.octo.bear.pago.model.service;
+package io.octo.bear.pago;
 
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -12,10 +12,7 @@ import android.text.TextUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
-import io.octo.bear.pago.BillingActivity;
-import io.octo.bear.pago.Pago;
 import io.octo.bear.pago.model.entity.Order;
 import io.octo.bear.pago.model.entity.Purchase;
 import io.octo.bear.pago.model.entity.PurchaseType;
