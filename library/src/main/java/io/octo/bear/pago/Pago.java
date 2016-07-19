@@ -18,7 +18,7 @@ import rx.Single;
  */
 public class Pago {
 
-    public static final int BILLING_API_VERSION = 3;
+    static final int BILLING_API_VERSION = 3;
 
     private static Gson gson = new Gson();
     private final Context context;
@@ -35,11 +35,11 @@ public class Pago {
         return new BillingAvailabilitySingle(context, PurchaseType.SUBSCRIPTION);
     }
 
-    public Single<List<Sku>> getProductsDetails(final List<String> skus) {
+    public Single<List<Sku>> obtainProductsDetails(final List<String> skus) {
         return new ProductDetailsSingle(context, PurchaseType.INAPP, skus);
     }
 
-    public Single<List<Sku>> getSSubscriptionsDetails(final List<String> skus) {
+    public Single<List<Sku>> obtainSubscriptionsDetails(final List<String> skus) {
         return new ProductDetailsSingle(context, PurchaseType.SUBSCRIPTION, skus);
     }
 
