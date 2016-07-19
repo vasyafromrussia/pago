@@ -20,7 +20,8 @@ public class BillingActivity extends Activity {
 
     private static final String TAG = BillingActivity.class.getSimpleName();
 
-    static final String ACTION_PURCHASE_SUCCESS = "io.octo.bear.pago.broadcast:purchase_success";
+    static final String ACTION_PURCHASE = "io.octo.bear.pago.broadcast:purchase_success";
+    static final String EXTRA_SUCCESS = "io.octo.bear.pago:extra.success";
 
     private static final int REQUEST_CODE = 1001;
 
@@ -50,14 +51,9 @@ public class BillingActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                data.setAction(ACTION_PURCHASE_SUCCESS);
-                LocalBroadcastManager
-                        .getInstance(this)
-                        .sendBroadcast(data);
-            } else {
-                throw new RuntimeException("unable to perform purchase");
-            }
+            data.setAction(ACTION_PURCHASE);
+            data.putExtra(EXTRA_SUCCESS, resultCode == RESULT_OK);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(data);
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }

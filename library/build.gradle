@@ -49,7 +49,7 @@ dependencies {
 
     compile 'com.android.support:appcompat-v7:24.0.0'
 
-    compile 'io.reactivex:rxjava:1.1.6'
+    compile 'io.reactivex:rxjava:1.1.7'
 
     compile 'com.google.code.gson:gson:2.7'
 

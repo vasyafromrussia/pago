@@ -109,7 +109,7 @@ final class BillingServiceHelper {
                         .getInstance(context)
                         .registerReceiver(
                                 createPurchaseBroadcastReceiver(payload, subscriber),
-                                new IntentFilter(BillingActivity.ACTION_PURCHASE_SUCCESS));
+                                new IntentFilter(BillingActivity.ACTION_PURCHASE));
 
                 BillingActivity.start(context, buyIntent);
             } catch (BillingException e) {
@@ -186,6 +186,12 @@ final class BillingServiceHelper {
                     LocalBroadcastManager.getInstance(context).unregisterReceiver(this);
 
                     final Bundle result = data.getExtras();
+
+                    final boolean success = result.getBoolean(BillingActivity.EXTRA_SUCCESS, false);
+                    if (!success) {
+                        throw new BillingException(ResponseCode.ITEM_UNAVAILABLE);
+                    }
+
                     final ResponseCode code = retrieveResponseCode(result);
 
                     checkResponseAndThrowIfError(code);
