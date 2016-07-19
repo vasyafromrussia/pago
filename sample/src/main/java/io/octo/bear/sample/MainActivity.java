@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
-                                purchase -> showSuccessDialog("Purchased successfully: " + purchase.productId),
+                                order -> showSuccessDialog("Purchased successfully: " + order.purchase.productId),
                                 this::showErrorDialog
                         ));
 
@@ -57,8 +57,8 @@ public class MainActivity extends AppCompatActivity {
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
-                                result -> showSuccessDialog("Purchase consumed successfully"),
-                                this::showErrorDialog
+                                this::showErrorDialog,
+                                () -> showSuccessDialog("Purchase consumed successfully")
                         ));
 
     }

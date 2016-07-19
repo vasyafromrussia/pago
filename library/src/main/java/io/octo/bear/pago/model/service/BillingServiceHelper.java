@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import io.octo.bear.pago.BillingActivity;
 import io.octo.bear.pago.Pago;
+import io.octo.bear.pago.model.entity.Order;
 import io.octo.bear.pago.model.entity.Purchase;
 import io.octo.bear.pago.model.entity.PurchaseType;
 import io.octo.bear.pago.model.entity.PurchasedItem;
@@ -90,7 +91,7 @@ final class BillingServiceHelper {
     }
 
     static void purchaseItem(
-            final Context context, final String sku, final PurchaseType type, final SingleSubscriber<? super Purchase> subscriber) {
+            final Context context, final String sku, final PurchaseType type, final SingleSubscriber<? super Order> subscriber) {
 
         new BillingServiceConnection(context, service -> {
             try {
@@ -179,7 +180,7 @@ final class BillingServiceHelper {
     }
 
     private static BroadcastReceiver createPurchaseBroadcastReceiver
-            (final String payload, final SingleSubscriber<? super Purchase> subscriber) {
+            (final String payload, final SingleSubscriber<? super Order> subscriber) {
 
         return new BroadcastReceiver() {
             @Override
@@ -193,10 +194,12 @@ final class BillingServiceHelper {
                     checkResponseAndThrowIfError(code);
 
                     final Purchase purchase = Pago.gson().fromJson(result.getString(RESPONSE_INAPP_PURCHASE_DATA), Purchase.class);
+                    final Order order = new Order(purchase, result.getString(RESPONSE_INAPP_DATA_SIGNATURE));
+
                     final boolean purchaseDataIsCorrect = TextUtils.equals(payload, purchase.developerPayload);
 
                     if (purchaseDataIsCorrect) {
-                        subscriber.onSuccess(purchase);
+                        subscriber.onSuccess(order);
                     } else {
                         throw new RuntimeException("purchase data doesn't match with data that was sent in request");
                     }
