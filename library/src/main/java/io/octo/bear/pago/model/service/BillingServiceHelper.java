@@ -91,11 +91,11 @@ final class BillingServiceHelper {
     }
 
     static void purchaseItem(
-            final Context context, final String sku, final PurchaseType type, final SingleSubscriber<? super Order> subscriber) {
+            final Context context, final String sku, final PurchaseType type, final String payload,
+            final SingleSubscriber<? super Order> subscriber) {
 
         new BillingServiceConnection(context, service -> {
             try {
-                final String payload = UUID.randomUUID().toString();
                 final Bundle buyIntentBundle = service.getBuyIntent(Pago.BILLING_API_VERSION, context.getPackageName(),
                         sku, type.value, payload);
 

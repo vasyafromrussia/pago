@@ -14,8 +14,8 @@ import rx.Single;
 
 public class PurchasingObservable extends Single<Order> {
 
-    public PurchasingObservable(final Context context, final PurchaseType type, final String sku) {
-        super(subscriber -> BillingServiceHelper.purchaseItem(context, sku, type, subscriber));
+    public PurchasingObservable(final Context context, final PurchaseType type, final String sku, String payload) {
+        super(subscriber -> BillingServiceHelper.purchaseItem(context, sku, type, payload, subscriber));
     }
 
 }
