@@ -10,6 +10,7 @@ import io.octo.bear.pago.model.entity.Purchase;
 import io.octo.bear.pago.model.entity.PurchaseType;
 import io.octo.bear.pago.model.entity.PurchasedItem;
 import io.octo.bear.pago.model.entity.Sku;
+import io.octo.bear.pago.model.service.BillingAvailabiliyObservable;
 import io.octo.bear.pago.model.service.ConsumePurchaseObservable;
 import io.octo.bear.pago.model.service.PurchasedItemsObservable;
 import io.octo.bear.pago.model.service.PurchasingObservable;
@@ -29,6 +30,14 @@ public class Pago {
 
     public Pago(Context context) {
         this.context = context;
+    }
+
+    public Single<Boolean> checkPurchasesAvailability() {
+        return new BillingAvailabiliyObservable(context, PurchaseType.INAPP);
+    }
+
+    public Single<Boolean> checkSubscriptionAvailability() {
+        return new BillingAvailabiliyObservable(context, PurchaseType.SUBSCRIPTION);
     }
 
     public Single<List<Sku>> getSkuProductsDetails(final List<String> skuIds) {

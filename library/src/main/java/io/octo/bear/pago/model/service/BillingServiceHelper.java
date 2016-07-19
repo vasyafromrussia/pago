@@ -46,6 +46,21 @@ final class BillingServiceHelper {
     private static final String RESPONSE_INAPP_PURCHASE_SIGNATURE_LIST = "INAPP_DATA_SIGNATURE_LIST";
     private static final String RESPONSE_INAPP_CONTINUATION_TOKEN = "INAPP_CONTINUATION_TOKEN";
 
+    static void isBillingSupported(final Context context, final PurchaseType type, final SingleSubscriber<? super Boolean> subscriber) {
+        new BillingServiceConnection(context, service -> {
+            try {
+                final int codeNumber = service.isBillingSupported(Pago.BILLING_API_VERSION, context.getPackageName(), type.value);
+                final ResponseCode code = ResponseCode.getByCode(codeNumber);
+
+                checkResponseAndThrowIfError(code);
+
+                subscriber.onSuccess(true);
+            } catch (Throwable e) {
+                subscriber.onError(e);
+            }
+        }).bindService();
+    }
+
     static void obtainSkuDetails(
             final Context context, final List<String> purchaseIds, final PurchaseType type, final SingleSubscriber<? super List<Sku>> subscriber) {
 
