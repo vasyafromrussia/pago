@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         final Pago pago = new Pago(getApplicationContext());
 
         purchased.setOnClickListener(view ->
-                pago.purchaseProduct(ITEM_PURCHASED)
+                pago.purchaseProduct(ITEM_PURCHASED, "some_payload")
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
