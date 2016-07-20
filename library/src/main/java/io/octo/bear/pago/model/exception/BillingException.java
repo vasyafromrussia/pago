@@ -8,12 +8,19 @@ import io.octo.bear.pago.model.entity.ResponseCode;
 
 public class BillingException extends Throwable {
 
+    private final ResponseCode code;
+
     public BillingException(int code) {
         this(ResponseCode.getByCode(code));
     }
 
     public BillingException(ResponseCode code) {
         super(getErrorMessage(code));
+        this.code = code;
+    }
+
+    public ResponseCode getCode() {
+        return code;
     }
 
     private static String getErrorMessage(ResponseCode code) {
