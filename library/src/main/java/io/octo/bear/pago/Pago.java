@@ -92,7 +92,7 @@ public class Pago {
     }
 
     /**
-     * Use this method to check <i>products</i>, that user have already bought.
+     * Use this method to check <i>products</i>, that user has already bought.
      *
      * @return {@link Single} that emits {@link PurchasedItem} containing purchased products data
      */
@@ -101,7 +101,7 @@ public class Pago {
     }
 
     /**
-     * Use this method to check <i>subscription</i>, that user have already bought.
+     * Use this method to check <i>subscription</i>, that user has already bought.
      *
      * @return {@link Single} that emits {@link PurchasedItem} containing purchased subscriptions data
      */
