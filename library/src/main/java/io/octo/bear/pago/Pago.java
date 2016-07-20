@@ -12,8 +12,12 @@ import rx.Completable;
 import rx.Single;
 
 /**
- * todo javadoc
  * Created by shc on 14.07.16.
+ *
+ * <p>
+ *     This class is entry point to the wonderful world of Play Store in-app purchases. <br/>
+ *     There's couple of methods for each purchase-related action (for products and subscriptions).
+ * </p>
  */
 public class Pago {
 
@@ -21,22 +25,47 @@ public class Pago {
 
     private final Context context;
 
+    /**
+     * @param context the context is needed to start IAB-related services
+     */
     public Pago(Context context) {
         this.context = context;
     }
 
+    /**
+     * Check if target version of billing API supports <i>in-app purchases</i>.
+     *
+     * @return single that emits {@code true} value if supported and Exception otherwise
+     */
     public Single<Boolean> checkPurchasesAvailability() {
         return new BillingAvailabilitySingle(context, PurchaseType.INAPP);
     }
 
+    /**
+     * Check if target version of billing API supports <i>subscriptions</i>.
+     *
+     * @return single that emits {@code true} value if supported and Exception otherwise
+     */
     public Single<Boolean> checkSubscriptionAvailability() {
         return new BillingAvailabilitySingle(context, PurchaseType.SUBSCRIPTION);
     }
 
+    /**
+     * Use this method to query details about desired <i>products</i> (title, price, descriptions etc).
+     *
+     * @param skus list of desired items' product IDs
+     * @return {@link Inventory}, that represents collection of described products
+     */
     public Single<Inventory> obtainProductsDetails(final List<String> skus) {
         return new ProductDetailsSingle(context, PurchaseType.INAPP, skus);
     }
 
+    /**
+     * Use this method to query details about desired <i>subscriptions</i> (title, price, descriptions etc).
+     *
+     * @param skus list of desired items' product IDs
+     * @return {@link Inventory}, that represents collection of described products
+     */
     public Single<Inventory> obtainSubscriptionsDetails(final List<String> skus) {
         return new ProductDetailsSingle(context, PurchaseType.SUBSCRIPTION, skus);
     }
