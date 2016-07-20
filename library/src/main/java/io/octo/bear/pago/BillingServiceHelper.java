@@ -10,6 +10,8 @@ import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +28,7 @@ import rx.SingleSubscriber;
 
 /**
  * Created by shc on 15.07.16.
+ * todo inline static methods in corresponding singles
  */
 final class BillingServiceHelper {
 
@@ -44,6 +47,8 @@ final class BillingServiceHelper {
     private static final String RESPONSE_INAPP_PURCHASE_DATA_LIST = "INAPP_PURCHASE_DATA_LIST";
     private static final String RESPONSE_INAPP_PURCHASE_SIGNATURE_LIST = "INAPP_DATA_SIGNATURE_LIST";
     private static final String RESPONSE_INAPP_CONTINUATION_TOKEN = "INAPP_CONTINUATION_TOKEN";
+
+    private final static Gson GSON = new Gson();
 
     static void isBillingSupported(final Context context, final PurchaseType type, final SingleSubscriber<? super Boolean> subscriber) {
         new BillingServiceConnection(context, service -> {
@@ -78,7 +83,7 @@ final class BillingServiceHelper {
 
                 final Inventory inventory = new Inventory();
                 for (String serializedSku : skus) {
-                    inventory.addItem(Pago.gson().fromJson(serializedSku, Sku.class));
+                    inventory.addItem(GSON.fromJson(serializedSku, Sku.class));
                 }
 
                 subscriber.onSuccess(inventory);
@@ -141,7 +146,7 @@ final class BillingServiceHelper {
 
                 for (int i = 0; i < data.size(); i++) {
                     result.add(new PurchasedItem(
-                            Pago.gson().fromJson(data.get(i), Purchase.class),
+                            GSON.fromJson(data.get(i), Purchase.class),
                             signatures.get(i),
                             skus.get(i)));
                 }
@@ -197,7 +202,7 @@ final class BillingServiceHelper {
 
                     checkResponseAndThrowIfError(code);
 
-                    final Purchase purchase = Pago.gson().fromJson(result.getString(RESPONSE_INAPP_PURCHASE_DATA), Purchase.class);
+                    final Purchase purchase = GSON.fromJson(result.getString(RESPONSE_INAPP_PURCHASE_DATA), Purchase.class);
                     final Order order = new Order(purchase, result.getString(RESPONSE_INAPP_DATA_SIGNATURE));
 
                     final boolean purchaseDataIsCorrect = TextUtils.equals(payload, purchase.developerPayload);
