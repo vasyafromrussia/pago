@@ -15,7 +15,9 @@ import rx.Single;
  * Created by shc on 14.07.16.
  * <p>
  * This class is entry point to the wonderful world of Play Store in-app purchases. <br/>
- * There's couple of methods for each purchase-related action (for products and subscriptions).
+ * There's couple of wrapped in Rx methods for each purchase-related action (for products and subscriptions). <br/>
+ * <b>Note</b>: presented observables don't have default scheduler, so it would work on thread where they were called.
+ * Applying any schedulers stays up to you.
  * </p>
  */
 public class Pago {
