@@ -20,6 +20,9 @@ class BillingServiceConnection implements ServiceConnection {
 
     private static final String TAG = BillingServiceConnection.class.getSimpleName();
 
+    private static final String IAB_SERVICE_ACTION = "com.android.vending.billing.InAppBillingService.BIND";
+    private static final String IAB_SERVICE_PACKAGE = "com.android.vending";
+
     private IInAppBillingService inAppBillingService;
     private ServiceConnectionListener listener;
     private Context context;
@@ -30,8 +33,8 @@ class BillingServiceConnection implements ServiceConnection {
     }
 
     void bindService() {
-        final Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
-        serviceIntent.setPackage("com.android.vending");
+        final Intent serviceIntent = new Intent(IAB_SERVICE_ACTION);
+        serviceIntent.setPackage(IAB_SERVICE_PACKAGE);
         context.bindService(serviceIntent, this, BIND_AUTO_CREATE);
     }
 

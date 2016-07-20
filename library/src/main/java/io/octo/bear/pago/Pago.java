@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 
 import java.util.List;
 
+import io.octo.bear.pago.model.entity.Inventory;
 import io.octo.bear.pago.model.entity.Order;
 import io.octo.bear.pago.model.entity.PurchaseType;
 import io.octo.bear.pago.model.entity.PurchasedItem;
@@ -35,11 +36,11 @@ public class Pago {
         return new BillingAvailabilitySingle(context, PurchaseType.SUBSCRIPTION);
     }
 
-    public Single<List<Sku>> obtainProductsDetails(final List<String> skus) {
+    public Single<Inventory> obtainProductsDetails(final List<String> skus) {
         return new ProductDetailsSingle(context, PurchaseType.INAPP, skus);
     }
 
-    public Single<List<Sku>> obtainSubscriptionsDetails(final List<String> skus) {
+    public Single<Inventory> obtainSubscriptionsDetails(final List<String> skus) {
         return new ProductDetailsSingle(context, PurchaseType.SUBSCRIPTION, skus);
     }
 
@@ -63,7 +64,7 @@ public class Pago {
         return new ConsumePurchaseCompletable(context, purchaseToken);
     }
 
-    public static Gson gson() {
+    static Gson gson() {
         return gson;
     }
 

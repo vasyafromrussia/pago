@@ -13,6 +13,7 @@ import android.text.TextUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.octo.bear.pago.model.entity.Inventory;
 import io.octo.bear.pago.model.entity.Order;
 import io.octo.bear.pago.model.entity.Purchase;
 import io.octo.bear.pago.model.entity.PurchaseType;
@@ -60,7 +61,7 @@ final class BillingServiceHelper {
     }
 
     static void obtainSkuDetails(
-            final Context context, final List<String> purchaseIds, final PurchaseType type, final SingleSubscriber<? super List<Sku>> subscriber) {
+            final Context context, final List<String> purchaseIds, final PurchaseType type, final SingleSubscriber<? super Inventory> subscriber) {
 
         new BillingServiceConnection(context, service -> {
             try {
@@ -75,12 +76,12 @@ final class BillingServiceHelper {
                 final ArrayList<String> skus = details.getStringArrayList(RESPONSE_DETAILS_LIST);
                 if (skus == null) throw new RuntimeException("skus list is not supplied");
 
-                final List<Sku> result = new ArrayList<>();
+                final Inventory inventory = new Inventory();
                 for (String serializedSku : skus) {
-                    result.add(Pago.gson().fromJson(serializedSku, Sku.class));
+                    inventory.addItem(Pago.gson().fromJson(serializedSku, Sku.class));
                 }
 
-                subscriber.onSuccess(result);
+                subscriber.onSuccess(inventory);
             } catch (RemoteException | BillingException e) {
                 subscriber.onError(e);
             }
@@ -176,8 +177,8 @@ final class BillingServiceHelper {
         if (code != ResponseCode.OK) throw new BillingException(code);
     }
 
-    private static BroadcastReceiver createPurchaseBroadcastReceiver
-            (final String payload, final SingleSubscriber<? super Order> subscriber) {
+    private static BroadcastReceiver createPurchaseBroadcastReceiver(
+            final String payload, final SingleSubscriber<? super Order> subscriber) {
 
         return new BroadcastReceiver() {
             @Override
