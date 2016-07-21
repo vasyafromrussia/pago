@@ -7,7 +7,6 @@ import java.util.List;
 import io.octo.bear.pago.model.entity.Inventory;
 import io.octo.bear.pago.model.entity.Order;
 import io.octo.bear.pago.model.entity.PurchaseType;
-import io.octo.bear.pago.model.entity.PurchasedItem;
 import rx.Completable;
 import rx.Single;
 
@@ -96,18 +95,18 @@ public class Pago {
     /**
      * Use this method to check <i>products</i>, that user has already bought.
      *
-     * @return {@link Single} that emits {@link PurchasedItem} containing purchased products data
+     * @return {@link Single} that emits {@link Order} containing purchased products data
      */
-    public Single<List<PurchasedItem>> obtainPurchasedProducts() {
+    public Single<List<Order>> obtainPurchasedProducts() {
         return new PurchasedItemsSingle(context, PurchaseType.INAPP);
     }
 
     /**
      * Use this method to check <i>subscription</i>, that user has already bought.
      *
-     * @return {@link Single} that emits {@link PurchasedItem} containing purchased subscriptions data
+     * @return {@link Single} that emits {@link Order} containing purchased subscriptions data
      */
-    public Single<List<PurchasedItem>> obtainPurchasedSubscriptions() {
+    public Single<List<Order>> obtainPurchasedSubscriptions() {
         return new PurchasedItemsSingle(context, PurchaseType.SUBSCRIPTION);
     }
 
@@ -117,7 +116,7 @@ public class Pago {
      * And yes, you can do it with this method. <br/>
      * <b>Note:</b> subscriptions cannot be consumed.
      *
-     * @param purchaseToken token of purchased product, can be taken from {@link Order} or {@link PurchasedItem}
+     * @param purchaseToken token of purchased product, can be taken from {@link Order}
      * @return {@link Completable} that notifies you about either successful consumption, or error
      */
     public Completable consumeProduct(final String purchaseToken) {
