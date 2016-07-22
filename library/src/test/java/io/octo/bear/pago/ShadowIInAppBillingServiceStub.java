@@ -1,6 +1,7 @@
 package io.octo.bear.pago;
 
 import android.os.Bundle;
+import android.os.RemoteException;
 
 import com.android.vending.billing.IInAppBillingService;
 
@@ -24,38 +25,34 @@ public class ShadowIInAppBillingServiceStub {
 
     static final String TEST_SKU = "test.product.id";
 
-    private static final String TEST_SKU_DETAILS_RESPONSE = "{\"productId\":\"%s\",\"type\":\"%s\",\"price\":\"$5.00\",\"title\":\"Example Title\",\"description\":\"This is an example description\"}";
-
     @SuppressWarnings("unused")
     @Implementation
     public static com.android.vending.billing.IInAppBillingService asInterface(android.os.IBinder obj) throws Exception {
         final IInAppBillingService service = Mockito.mock(IInAppBillingService.class);
 
+        setupBillingSupportedResponse(service, PurchaseType.INAPP);
+        setupBillingSupportedResponse(service, PurchaseType.SUBSCRIPTION);
+
+        setupDetailsResponse(service, PurchaseType.INAPP);
+        setupDetailsResponse(service, PurchaseType.SUBSCRIPTION);
+
+        return service;
+    }
+
+    private static void setupBillingSupportedResponse(IInAppBillingService service, PurchaseType type) throws RemoteException {
         Mockito.doReturn(0)
                 .when(service)
-                .isBillingSupported(Pago.BILLING_API_VERSION, PagoTest.PACKAGE_NAME, PurchaseType.INAPP.value);
+                .isBillingSupported(Pago.BILLING_API_VERSION, PagoTest.PACKAGE_NAME, type.value);
+    }
 
-        Mockito.doReturn(0)
-                .when(service)
-                .isBillingSupported(Pago.BILLING_API_VERSION, PagoTest.PACKAGE_NAME, PurchaseType.SUBSCRIPTION.value);
-
-        Mockito.doReturn(getTestInventory(PurchaseType.INAPP))
-                .when(service)
-                .getSkuDetails(
-                        eq(Pago.BILLING_API_VERSION),
-                        eq(PagoTest.PACKAGE_NAME),
-                        eq(PurchaseType.INAPP.value),
-                        argThat(new BundleMatcher(createSkusInfoRequestBundle())));
-
+    private static void setupDetailsResponse(IInAppBillingService service, PurchaseType type) throws RemoteException {
         Mockito.doReturn(getTestInventory(PurchaseType.SUBSCRIPTION))
                 .when(service)
                 .getSkuDetails(
                         eq(Pago.BILLING_API_VERSION),
                         eq(PagoTest.PACKAGE_NAME),
-                        eq(PurchaseType.SUBSCRIPTION.value),
+                        eq(type.value),
                         argThat(new BundleMatcher(createSkusInfoRequestBundle())));
-
-        return service;
     }
 
     private static Bundle createSkusInfoRequestBundle() {
@@ -66,7 +63,7 @@ public class ShadowIInAppBillingServiceStub {
 
     private static Bundle getTestInventory(final PurchaseType type) {
         final Bundle result = new Bundle();
-        final String detailsJson = String.format(TEST_SKU_DETAILS_RESPONSE, TEST_SKU, type.value);
+        final String detailsJson = String.format(MockResponse.SKU_DETAILS_RESPONSE, TEST_SKU, type.value);
         result.putInt("RESPONSE_CODE", 0);
         result.putStringArrayList("DETAILS_LIST", new ArrayList<>(Collections.singletonList(detailsJson)));
         return result;
