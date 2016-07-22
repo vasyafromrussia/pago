@@ -22,5 +22,7 @@ public class ExampleInstrumentedTest {
         Context appContext = InstrumentationRegistry.getTargetContext();
 
         assertEquals("io.octo.bear.pago.test", appContext.getPackageName());
+
+        final Pago pago = new Pago(appContext);
     }
 }
