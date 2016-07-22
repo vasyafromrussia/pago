@@ -24,6 +24,8 @@ public class ShadowIInAppBillingServiceStub {
 
     static final String TEST_SKU = "test.product.id";
 
+    private static final String TEST_SKU_DETAILS_RESPONSE = "{\"productId\":\"%s\",\"type\":\"%s\",\"price\":\"$5.00\",\"title\":\"Example Title\",\"description\":\"This is an example description\"}";
+
     @SuppressWarnings("unused")
     @Implementation
     public static com.android.vending.billing.IInAppBillingService asInterface(android.os.IBinder obj) throws Exception {
@@ -64,10 +66,7 @@ public class ShadowIInAppBillingServiceStub {
 
     private static Bundle getTestInventory(final PurchaseType type) {
         final Bundle result = new Bundle();
-        final String detailsJson = String.format(
-                "{\"productId\":\"%s\",\"type\":\"%s\",\"price\":\"$5.00\"," +
-                        "\"title\":\"Example Title\",\"description\":\"This is an example description\"}",
-                TEST_SKU, type.value);
+        final String detailsJson = String.format(TEST_SKU_DETAILS_RESPONSE, TEST_SKU, type.value);
         result.putInt("RESPONSE_CODE", 0);
         result.putStringArrayList("DETAILS_LIST", new ArrayList<>(Collections.singletonList(detailsJson)));
         return result;
