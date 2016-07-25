@@ -15,14 +15,20 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowActivity;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.octo.bear.pago.model.entity.Inventory;
 import io.octo.bear.pago.model.entity.Order;
 import io.octo.bear.pago.model.entity.PurchaseType;
+import io.octo.bear.pago.model.entity.ResponseCode;
 import io.octo.bear.pago.model.exception.BillingException;
+import rx.functions.Action1;
 import rx.observers.TestSubscriber;
 
+import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.OWNED_DEVELOPER_PAYLOAD;
+import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.OWNED_SKU;
+import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.PURCHASED_ITEM_COUNT;
 import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.TEST_DEVELOPER_PAYLOAD;
 import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.TEST_PURCHASE_TOKEN;
 import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.TEST_SKU;
@@ -50,28 +56,18 @@ public class PagoTest {
     }
 
     @Test
-    public void testSubscriptionAvailabilitySingle() {
-        testBillingAvailabilitySingle(PurchaseType.SUBSCRIPTION);
-    }
-
-    @Test
     public void testObtainProductDetailsSingle() {
         testObtainDetailsSingle(PurchaseType.INAPP);
     }
 
     @Test
-    public void testObtainSubscriptionDetailsSingle() {
-        testObtainDetailsSingle(PurchaseType.SUBSCRIPTION);
-    }
-
-    @Test
     public void testPurchaseProductSingle() throws IntentSender.SendIntentException, InterruptedException {
-        testPerformPurchaseSingle(PurchaseType.INAPP);
+        testPerformSuccessfulPurchase(PurchaseType.INAPP);
     }
 
     @Test
-    public void testPurchaseSubscriptionSingle() throws IntentSender.SendIntentException, InterruptedException {
-        testPerformPurchaseSingle(PurchaseType.SUBSCRIPTION);
+    public void testPurchaseOwnedProduct() throws InterruptedException, IntentSender.SendIntentException {
+        testPerformOwnedPurchase(PurchaseType.INAPP);
     }
 
     @Test
@@ -87,6 +83,18 @@ public class PagoTest {
         final TestSubscriber<Void> subscriber = new TestSubscriber<>();
         new ConsumePurchaseCompletable(RuntimeEnvironment.application, null).subscribe(subscriber);
         subscriber.assertError(BillingException.class);
+    }
+
+    @Test
+    public void testPurchasedProductsListSingle() {
+        testObtainPurchasedItemsSingle(PurchaseType.INAPP);
+    }
+
+    private void testObtainPurchasedItemsSingle(final PurchaseType type) {
+        final TestSubscriber<List<Order>> subscriber = new TestSubscriber<>();
+        new PurchasedItemsSingle(RuntimeEnvironment.application, type).subscribe(subscriber);
+        subscriber.assertNoErrors();
+        subscriber.assertValueCount(PURCHASED_ITEM_COUNT);
     }
 
     private void testBillingAvailabilitySingle(final PurchaseType type) {
@@ -106,7 +114,7 @@ public class PagoTest {
         assertNotNull(inventory.getSku(productId));
     }
 
-    public void testPerformPurchaseSingle(final PurchaseType type) throws InterruptedException, IntentSender.SendIntentException {
+    private void testPerformSuccessfulPurchase(final PurchaseType type) throws IntentSender.SendIntentException, InterruptedException {
         //start purchase flow
         final TestSubscriber<Order> subscriber = new TestSubscriber<>();
         final PerformPurchaseSingle performPurchaseSingle = new PerformPurchaseSingle(
@@ -123,7 +131,7 @@ public class PagoTest {
         assertNotNull(billingActivityIntent);
         assertNotNull(billingActivityIntent.getParcelableExtra(BillingActivity.EXTRA_BUY_INTENT));
 
-        checkBillingActivityReceivesResult(billingActivityIntent);
+        receiveResultInBillingActivity(billingActivityIntent, MockResponse.PURCHASE_RESULT);
 
         subscriber.assertNoErrors();
         subscriber.assertValueCount(1);
@@ -132,7 +140,23 @@ public class PagoTest {
         assertEquals(order.purchase.developerPayload, TEST_DEVELOPER_PAYLOAD);
     }
 
-    private void checkBillingActivityReceivesResult(Intent billingActivityIntent) {
+    private void testPerformOwnedPurchase(final PurchaseType type) throws IntentSender.SendIntentException, InterruptedException {
+        //start purchase flow
+        final TestSubscriber<Order> subscriber = new TestSubscriber<>();
+        final PerformPurchaseSingle performPurchaseSingle = new PerformPurchaseSingle(
+                RuntimeEnvironment.application,
+                type,
+                OWNED_SKU,
+                OWNED_DEVELOPER_PAYLOAD
+        );
+        performPurchaseSingle.subscribe(subscriber);
+
+        subscriber.assertError(BillingException.class);
+        final BillingException exception = (BillingException) subscriber.getOnErrorEvents().get(0);
+        assertEquals(exception.getCode(), ResponseCode.ITEM_ALREADY_OWNED);
+    }
+
+    private void receiveResultInBillingActivity(Intent billingActivityIntent, Intent result) {
         final BillingActivity billingActivity = Robolectric
                 .buildActivity(BillingActivity.class)
                 .withIntent(billingActivityIntent)
@@ -143,7 +167,7 @@ public class PagoTest {
 
         // TODO: 25.07.16 is there better way to check startIntentSenderForResult?
         shadowBillingActivity.startActivityForResult(new Intent(), BillingActivity.REQUEST_CODE);
-        shadowBillingActivity.receiveResult(new Intent(), Activity.RESULT_OK, MockResponse.PURCHASE_RESULT);
+        shadowBillingActivity.receiveResult(new Intent(), Activity.RESULT_OK, result);
     }
 
     private Intent getBillingActivityIntent(ShadowActivity shadowActivity) throws InterruptedException {
