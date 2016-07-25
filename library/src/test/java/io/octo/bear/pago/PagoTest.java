@@ -93,7 +93,9 @@ public class PagoTest {
         final TestSubscriber<List<Order>> subscriber = new TestSubscriber<>();
         new PurchasedItemsSingle(RuntimeEnvironment.application, type).subscribe(subscriber);
         subscriber.assertNoErrors();
-        subscriber.assertValueCount(PURCHASED_ITEM_COUNT);
+        final List<Order> orders = subscriber.getOnNextEvents().get(0);
+        assertNotNull(orders);
+        assertEquals(PURCHASED_ITEM_COUNT, orders.size());
     }
 
     private void testBillingAvailabilitySingle(final PurchaseType type) {

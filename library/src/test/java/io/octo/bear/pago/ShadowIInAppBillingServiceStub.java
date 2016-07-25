@@ -93,7 +93,7 @@ public class ShadowIInAppBillingServiceStub {
     }
 
     private static void setupDetailsResponse(IInAppBillingService service, PurchaseType type) throws RemoteException {
-        Mockito.doReturn(createInventory(PurchaseType.SUBSCRIPTION))
+        Mockito.doReturn(createInventory(type))
                 .when(service)
                 .getSkuDetails(
                         eq(Pago.BILLING_API_VERSION),
@@ -124,16 +124,15 @@ public class ShadowIInAppBillingServiceStub {
 
     private static Bundle createSkusInfoRequestBundle() {
         final Bundle bundle = new Bundle();
-        bundle.putInt(RESPONSE_CODE, 0);
-        bundle.putStringArrayList("ITEM_ID_LIST", new ArrayList<>(Collections.singletonList(TEST_SKU)));
+        bundle.putStringArrayList(ProductDetailsSingle.EXTRA_ITEM_ID_LIST, new ArrayList<>(Collections.singletonList(TEST_SKU)));
         return bundle;
     }
 
     private static Bundle createInventory(final PurchaseType type) {
         final Bundle result = new Bundle();
         final String detailsJson = String.format(MockResponse.SKU_DETAILS_RESPONSE, TEST_SKU, type.value);
-        result.putInt(RESPONSE_CODE, 0);
-        result.putStringArrayList("DETAILS_LIST", new ArrayList<>(Collections.singletonList(detailsJson)));
+        result.putInt(RESPONSE_CODE, ResponseCode.OK.code);
+        result.putStringArrayList(ProductDetailsSingle.RESPONSE_DETAILS_LIST, new ArrayList<>(Collections.singletonList(detailsJson)));
         return result;
     }
 
