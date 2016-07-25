@@ -23,9 +23,9 @@ public class BillingActivity extends Activity {
     static final String ACTION_PURCHASE = "io.octo.bear.pago.broadcast:purchase_success";
     static final String EXTRA_SUCCESS = "io.octo.bear.pago:extra.success";
 
-    private static final int REQUEST_CODE = 1001;
+    static final int REQUEST_CODE = 1001;
 
-    private static final String EXTRA_BUY_INTENT = "extra.buy_intent";
+    static final String EXTRA_BUY_INTENT = "extra.buy_intent";
 
     static void start(@NonNull final Context context, @NonNull final PendingIntent buyIntent) {
         final Intent intent = new Intent(context, BillingActivity.class);
