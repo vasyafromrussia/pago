@@ -23,7 +23,6 @@ import io.octo.bear.pago.model.entity.Order;
 import io.octo.bear.pago.model.entity.PurchaseType;
 import io.octo.bear.pago.model.entity.ResponseCode;
 import io.octo.bear.pago.model.exception.BillingException;
-import rx.functions.Action1;
 import rx.observers.TestSubscriber;
 
 import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.OWNED_DEVELOPER_PAYLOAD;
