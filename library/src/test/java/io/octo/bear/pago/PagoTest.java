@@ -15,18 +15,17 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowActivity;
 
 import java.util.Collections;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import io.octo.bear.pago.model.entity.Inventory;
+import io.octo.bear.pago.model.entity.Order;
 import io.octo.bear.pago.model.entity.PurchaseType;
 import rx.observers.TestSubscriber;
 
-import static io.octo.bear.pago.BillingServiceUtils.RESPONSE_CODE;
 import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.TEST_DEVELOPER_PAYLOAD;
 import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.TEST_SKU;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.robolectric.Shadows.shadowOf;
 
 /**
  * Created by shc on 21.07.16.
@@ -35,7 +34,9 @@ import static org.robolectric.Shadows.shadowOf;
 @Config(
         constants = BuildConfig.class,
         sdk = Build.VERSION_CODES.LOLLIPOP,
-        shadows = {ShadowIInAppBillingServiceStub.class}
+        shadows = {
+                ShadowIInAppBillingServiceStub.class
+        }
 )
 public class PagoTest {
 
@@ -61,6 +62,16 @@ public class PagoTest {
         testObtainDetailsSingle(PurchaseType.SUBSCRIPTION);
     }
 
+    @Test
+    public void testPurchaseProductSingle() throws IntentSender.SendIntentException, InterruptedException {
+        testPerformPurchaseSingle(PurchaseType.INAPP);
+    }
+
+    @Test
+    public void testPurchaseSubscriptionSingle() throws IntentSender.SendIntentException, InterruptedException {
+        testPerformPurchaseSingle(PurchaseType.SUBSCRIPTION);
+    }
+
     private void testBillingAvailabilitySingle(final PurchaseType type) {
         final TestSubscriber<Boolean> subscriber = new TestSubscriber<>();
         new BillingAvailabilitySingle(RuntimeEnvironment.application, type).subscribe(subscriber);
@@ -78,49 +89,51 @@ public class PagoTest {
         assertNotNull(inventory.getSku(productId));
     }
 
-    @Test
-    public void testPerformPurchaseSingle() throws InterruptedException, IntentSender.SendIntentException {
-
-        System.out.println("Test started");
-
-        // start client activity
-        final TestActivity activity = Robolectric.setupActivity(TestActivity.class);
-
-        // initiate purchase flow
-        activity.findViewById(R.id.test_button).performClick();
+    public void testPerformPurchaseSingle(final PurchaseType type) throws InterruptedException, IntentSender.SendIntentException {
+        //start purchase flow
+        final TestSubscriber<Order> subscriber = new TestSubscriber<>();
+        final PerformPurchaseSingle performPurchaseSingle = new PerformPurchaseSingle(
+                RuntimeEnvironment.application,
+                type,
+                TEST_SKU,
+                TEST_DEVELOPER_PAYLOAD
+        );
+        performPurchaseSingle.subscribe(subscriber);
 
         // check if BillingActivity was started within X seconds
-        final Intent billingActivityIntent = getBillingActivityIntent(activity);
+        final ShadowActivity shadowActivity = new ShadowActivity();
+        final Intent billingActivityIntent = getBillingActivityIntent(shadowActivity);
         assertNotNull(billingActivityIntent);
         assertNotNull(billingActivityIntent.getParcelableExtra(BillingActivity.EXTRA_BUY_INTENT));
 
+        checkBillingActivityReceivesResult(billingActivityIntent);
+
+        subscriber.assertNoErrors();
+        subscriber.assertValueCount(1);
+        final Order order = subscriber.getOnNextEvents().get(0);
+        assertEquals(order.purchase.productId, TEST_SKU);
+        assertEquals(order.purchase.developerPayload, TEST_DEVELOPER_PAYLOAD);
+    }
+
+    private void checkBillingActivityReceivesResult(Intent billingActivityIntent) {
         final BillingActivity billingActivity = Robolectric
                 .buildActivity(BillingActivity.class)
                 .withIntent(billingActivityIntent)
                 .setup()
                 .get();
 
-        final Intent intentForResult = new Intent();
-        final Intent resultIntent = new Intent()
-                .putExtra(RESPONSE_CODE, 0)
-                .putExtra(
-                        PerformPurchaseSingle.RESPONSE_INAPP_PURCHASE_DATA,
-                        String.format(MockResponse.BUY_INTENT_RESPONSE,
-                                RuntimeEnvironment.application.getPackageName(),
-                                TEST_SKU,
-                                TEST_DEVELOPER_PAYLOAD))
-                .putExtra(PerformPurchaseSingle.RESPONSE_INAPP_DATA_SIGNATURE, new Random().nextInt());
         final ShadowActivity shadowBillingActivity = Shadows.shadowOf(billingActivity);
 
-        shadowBillingActivity.startActivityForResult(intentForResult, BillingActivity.REQUEST_CODE);
-        shadowBillingActivity.receiveResult(intentForResult, Activity.RESULT_OK, resultIntent);
+        // TODO: 25.07.16 is there better way to check startIntentSenderForResult?
+        shadowBillingActivity.startActivityForResult(new Intent(), BillingActivity.REQUEST_CODE);
+        shadowBillingActivity.receiveResult(new Intent(), Activity.RESULT_OK, MockResponse.PURCHASE_RESULT);
     }
 
-    private Intent getBillingActivityIntent(TestActivity activity) throws InterruptedException {
+    private Intent getBillingActivityIntent(ShadowActivity shadowActivity) throws InterruptedException {
         long startTime = System.currentTimeMillis();
         long endTime = startTime + TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
         do {
-            final Intent intent = shadowOf(activity).getNextStartedActivity();
+            final Intent intent = shadowActivity.getNextStartedActivity();
             if (intent != null) {
                 return intent;
             }

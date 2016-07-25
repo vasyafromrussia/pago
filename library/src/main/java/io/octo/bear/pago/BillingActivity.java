@@ -41,6 +41,10 @@ public class BillingActivity extends Activity {
         final Bundle data = getIntent().getExtras();
         final PendingIntent buyIntent = data.getParcelable(EXTRA_BUY_INTENT);
 
+        startPurchaseFlow(buyIntent);
+    }
+
+    private void startPurchaseFlow(PendingIntent buyIntent) {
         try {
             startIntentSenderForResult(buyIntent.getIntentSender(), REQUEST_CODE, new Intent(), 0, 0, 0);
         } catch (IntentSender.SendIntentException e) {

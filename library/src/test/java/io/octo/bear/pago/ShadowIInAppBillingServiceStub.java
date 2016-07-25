@@ -64,7 +64,7 @@ public class ShadowIInAppBillingServiceStub {
                         argThat(new BundleMatcher(createSkusInfoRequestBundle())));
     }
 
-    private static void setupBuyIntentResponse(IInAppBillingService service, PurchaseType type) throws RemoteException {
+    private static void setupBuyIntentResponse(IInAppBillingService service, PurchaseType type) throws RemoteException, IntentSender.SendIntentException {
         Mockito.doReturn(createBuyIntentBundle())
                 .when(service)
                 .getBuyIntent(
@@ -89,7 +89,7 @@ public class ShadowIInAppBillingServiceStub {
         return result;
     }
 
-    private static Bundle createBuyIntentBundle() {
+    private static Bundle createBuyIntentBundle() throws IntentSender.SendIntentException {
         final Bundle result = new Bundle();
         final String dataJson = String.format(MockResponse.BUY_INTENT_RESPONSE,
                 PagoTest.PACKAGE_NAME, TEST_SKU, TEST_DEVELOPER_PAYLOAD);
@@ -100,7 +100,7 @@ public class ShadowIInAppBillingServiceStub {
         return result;
     }
 
-    private static PendingIntent createResponseBuyIntent() {
+    private static PendingIntent createResponseBuyIntent() throws IntentSender.SendIntentException {
         PendingIntent intent = Mockito.mock(PendingIntent.class);
         Mockito.doReturn(Mockito.mock(IntentSender.class)).when(intent).getIntentSender();
         return intent;
