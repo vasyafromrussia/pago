@@ -20,9 +20,11 @@ import java.util.concurrent.TimeUnit;
 import io.octo.bear.pago.model.entity.Inventory;
 import io.octo.bear.pago.model.entity.Order;
 import io.octo.bear.pago.model.entity.PurchaseType;
+import io.octo.bear.pago.model.exception.BillingException;
 import rx.observers.TestSubscriber;
 
 import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.TEST_DEVELOPER_PAYLOAD;
+import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.TEST_PURCHASE_TOKEN;
 import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.TEST_SKU;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -70,6 +72,21 @@ public class PagoTest {
     @Test
     public void testPurchaseSubscriptionSingle() throws IntentSender.SendIntentException, InterruptedException {
         testPerformPurchaseSingle(PurchaseType.SUBSCRIPTION);
+    }
+
+    @Test
+    public void testConsumptionSingle() {
+        final TestSubscriber<Void> subscriber = new TestSubscriber<>();
+        new ConsumePurchaseCompletable(RuntimeEnvironment.application, TEST_PURCHASE_TOKEN).subscribe(subscriber);
+        subscriber.assertNoErrors();
+        subscriber.assertCompleted();
+    }
+
+    @Test
+    public void testErrorOnConsumption() {
+        final TestSubscriber<Void> subscriber = new TestSubscriber<>();
+        new ConsumePurchaseCompletable(RuntimeEnvironment.application, null).subscribe(subscriber);
+        subscriber.assertError(BillingException.class);
     }
 
     private void testBillingAvailabilitySingle(final PurchaseType type) {

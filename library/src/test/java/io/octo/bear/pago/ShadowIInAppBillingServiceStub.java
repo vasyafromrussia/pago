@@ -27,6 +27,7 @@ public class ShadowIInAppBillingServiceStub {
 
     static final String TEST_SKU = "test.product.id";
     static final String TEST_DEVELOPER_PAYLOAD = "test developer payload";
+    static final String TEST_PURCHASE_TOKEN = "someTestTokenObtainedAfterPurchase";
 
     @SuppressWarnings("unused")
     @Implementation
@@ -42,7 +43,25 @@ public class ShadowIInAppBillingServiceStub {
         setupBuyIntentResponse(service, PurchaseType.INAPP);
         setupBuyIntentResponse(service, PurchaseType.SUBSCRIPTION);
 
+        setupConsumptionResponse(service);
+
         return service;
+    }
+
+    private static void setupConsumptionResponse(IInAppBillingService service) throws RemoteException {
+        Mockito.doReturn(0)
+                .when(service)
+                .consumePurchase(
+                        eq(Pago.BILLING_API_VERSION),
+                        eq(PagoTest.PACKAGE_NAME),
+                        eq(TEST_PURCHASE_TOKEN));
+
+        Mockito.doReturn(1)
+                .when(service)
+                .consumePurchase(
+                        eq(Pago.BILLING_API_VERSION),
+                        eq(PagoTest.PACKAGE_NAME),
+                        eq(null));
     }
 
     private static void setupBillingSupportedResponse(IInAppBillingService service, PurchaseType type) throws RemoteException {
@@ -91,11 +110,7 @@ public class ShadowIInAppBillingServiceStub {
 
     private static Bundle createBuyIntentBundle() throws IntentSender.SendIntentException {
         final Bundle result = new Bundle();
-        final String dataJson = String.format(MockResponse.BUY_INTENT_RESPONSE,
-                PagoTest.PACKAGE_NAME, TEST_SKU, TEST_DEVELOPER_PAYLOAD);
         result.putInt("RESPONSE_CODE", 0);
-        result.putString("INAPP_PURCHASE_DATA", dataJson);
-        result.putString("INAPP_DATA_SIGNATURE", "test signature");
         result.putParcelable(PerformPurchaseSingle.RESPONSE_BUY_INTENT, createResponseBuyIntent());
         return result;
     }
