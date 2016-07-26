@@ -30,6 +30,8 @@ import static io.octo.bear.pago.MockUtils.OWNED_DEVELOPER_PAYLOAD;
 import static io.octo.bear.pago.MockUtils.OWNED_SKU;
 import static io.octo.bear.pago.MockUtils.TEST_DEVELOPER_PAYLOAD;
 import static io.octo.bear.pago.MockUtils.TEST_SKU;
+import static io.octo.bear.pago.MockUtils.getBillingActivityIntent;
+import static io.octo.bear.pago.MockUtils.receiveResultInBillingActivity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -118,33 +120,6 @@ public class PagoErrorsTest {
         new ProductDetailsSingle(RuntimeEnvironment.application, PurchaseType.INAPP, Collections.singletonList(ERROR_SKU))
                 .subscribe(subscriber);
         subscriber.assertError(BillingException.class);
-    }
-
-    private void receiveResultInBillingActivity(Intent billingActivityIntent, Intent result) {
-        final BillingActivity billingActivity = Robolectric
-                .buildActivity(BillingActivity.class)
-                .withIntent(billingActivityIntent)
-                .setup()
-                .get();
-
-        final ShadowActivity shadowBillingActivity = Shadows.shadowOf(billingActivity);
-
-        shadowBillingActivity.startActivityForResult(new Intent(), BillingActivity.REQUEST_CODE);
-        shadowBillingActivity.receiveResult(new Intent(), Activity.RESULT_OK, result);
-    }
-
-    private Intent getBillingActivityIntent(ShadowActivity shadowActivity) throws InterruptedException {
-        long startTime = System.currentTimeMillis();
-        long endTime = startTime + TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
-        do {
-            final Intent intent = shadowActivity.getNextStartedActivity();
-            if (intent != null) {
-                return intent;
-            }
-            Thread.sleep(100);
-        } while (System.currentTimeMillis() < endTime);
-
-        return null;
     }
 
 }

@@ -1,14 +1,20 @@
 package io.octo.bear.pago;
 
+import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
 
 import org.mockito.Mockito;
+import org.robolectric.Robolectric;
+import org.robolectric.Shadows;
+import org.robolectric.shadows.ShadowActivity;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import io.octo.bear.pago.model.entity.PurchaseType;
 import io.octo.bear.pago.model.entity.ResponseCode;
@@ -19,7 +25,7 @@ import static io.octo.bear.pago.BillingServiceUtils.RESPONSE_CODE;
  * Created by shc on 26.07.16.
  */
 
-public class MockUtils {
+class MockUtils {
 
     static final String OWNED_SKU = "owned.product.id";
     static final String ERROR_SKU = "error.product.id";
@@ -41,7 +47,7 @@ public class MockUtils {
         return result;
     }
 
-     static Bundle createInventory(final PurchaseType type) {
+    static Bundle createInventory(final PurchaseType type) {
         final Bundle result = new Bundle();
         final String detailsJson = String.format(MockResponse.SKU_DETAILS_RESPONSE, TEST_SKU, type.value);
         result.putInt(RESPONSE_CODE, ResponseCode.OK.code);
@@ -49,20 +55,14 @@ public class MockUtils {
         return result;
     }
 
-     static Bundle createBuyIntentBundle() throws IntentSender.SendIntentException {
+    static Bundle createBuyIntentBundle() throws IntentSender.SendIntentException {
         final Bundle result = new Bundle();
         result.putInt(RESPONSE_CODE, 0);
         result.putParcelable(PerformPurchaseSingle.RESPONSE_BUY_INTENT, createResponseBuyIntent());
         return result;
     }
 
-     static PendingIntent createResponseBuyIntent() throws IntentSender.SendIntentException {
-        PendingIntent intent = Mockito.mock(PendingIntent.class);
-        Mockito.doReturn(Mockito.mock(IntentSender.class)).when(intent).getIntentSender();
-        return intent;
-    }
-
-     static Bundle createPurchasedListBundle(final PurchaseType type) {
+    static Bundle createPurchasedListBundle(final PurchaseType type) {
         final ArrayList<String> ids = new ArrayList<>();
         final ArrayList<String> details = new ArrayList<>();
         final ArrayList<String> signatures = new ArrayList<>();
@@ -81,6 +81,39 @@ public class MockUtils {
         result.putStringArrayList(PurchasedItemsSingle.RESPONSE_INAPP_PURCHASE_SIGNATURE_LIST, signatures);
 
         return result;
+    }
+
+    static void receiveResultInBillingActivity(Intent billingActivityIntent, Intent result) {
+        final BillingActivity billingActivity = Robolectric
+                .buildActivity(BillingActivity.class)
+                .withIntent(billingActivityIntent)
+                .setup()
+                .get();
+
+        final ShadowActivity shadowBillingActivity = Shadows.shadowOf(billingActivity);
+
+        shadowBillingActivity.startActivityForResult(new Intent(), BillingActivity.REQUEST_CODE);
+        shadowBillingActivity.receiveResult(new Intent(), Activity.RESULT_OK, result);
+    }
+
+    static Intent getBillingActivityIntent(ShadowActivity shadowActivity) throws InterruptedException {
+        long startTime = System.currentTimeMillis();
+        long endTime = startTime + TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
+        do {
+            final Intent intent = shadowActivity.getNextStartedActivity();
+            if (intent != null) {
+                return intent;
+            }
+            Thread.sleep(100);
+        } while (System.currentTimeMillis() < endTime);
+
+        return null;
+    }
+
+    private static PendingIntent createResponseBuyIntent() throws IntentSender.SendIntentException {
+        PendingIntent intent = Mockito.mock(PendingIntent.class);
+        Mockito.doReturn(Mockito.mock(IntentSender.class)).when(intent).getIntentSender();
+        return intent;
     }
 
 }
