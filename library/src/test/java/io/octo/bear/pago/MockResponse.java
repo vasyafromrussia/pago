@@ -29,4 +29,7 @@ interface MockResponse {
                     TEST_DEVELOPER_PAYLOAD))
             .putExtra(RESPONSE_INAPP_DATA_SIGNATURE, new Random().nextInt());
 
+    Intent PURCHASE_ERROR = new Intent()
+            .putExtra(RESPONSE_CODE, ResponseCode.ERROR.code);
+
 }

@@ -65,6 +65,11 @@ public class PagoTest {
     }
 
     @Test
+    public void testErrorDuringPurchaseFlow() throws IntentSender.SendIntentException, InterruptedException {
+        testPerformPurchaseWithError(PurchaseType.INAPP);
+    }
+
+    @Test
     public void testPurchaseOwnedProduct() throws InterruptedException, IntentSender.SendIntentException {
         testPerformOwnedPurchase(PurchaseType.INAPP);
     }
@@ -116,6 +121,8 @@ public class PagoTest {
     }
 
     private void testPerformSuccessfulPurchase(final PurchaseType type) throws IntentSender.SendIntentException, InterruptedException {
+        final ShadowActivity shadowActivity = new ShadowActivity();
+
         //start purchase flow
         final TestSubscriber<Order> subscriber = new TestSubscriber<>();
         final PerformPurchaseSingle performPurchaseSingle = new PerformPurchaseSingle(
@@ -127,7 +134,6 @@ public class PagoTest {
         performPurchaseSingle.subscribe(subscriber);
 
         // check if BillingActivity was started within X seconds
-        final ShadowActivity shadowActivity = new ShadowActivity();
         final Intent billingActivityIntent = getBillingActivityIntent(shadowActivity);
         assertNotNull(billingActivityIntent);
         assertNotNull(billingActivityIntent.getParcelableExtra(BillingActivity.EXTRA_BUY_INTENT));
@@ -139,6 +145,31 @@ public class PagoTest {
         final Order order = subscriber.getOnNextEvents().get(0);
         assertEquals(order.purchase.productId, TEST_SKU);
         assertEquals(order.purchase.developerPayload, TEST_DEVELOPER_PAYLOAD);
+    }
+
+    private void testPerformPurchaseWithError(final PurchaseType type) throws IntentSender.SendIntentException, InterruptedException {
+        final ShadowActivity shadowActivity = new ShadowActivity();
+
+        //start purchase flow
+        final TestSubscriber<Order> subscriber = new TestSubscriber<>();
+        final PerformPurchaseSingle performPurchaseSingle = new PerformPurchaseSingle(
+                RuntimeEnvironment.application,
+                type,
+                TEST_SKU,
+                TEST_DEVELOPER_PAYLOAD
+        );
+        performPurchaseSingle.subscribe(subscriber);
+
+        // check if BillingActivity was started within X seconds
+        final Intent billingActivityIntent = getBillingActivityIntent(shadowActivity);
+        assertNotNull(billingActivityIntent);
+        assertNotNull(billingActivityIntent.getParcelableExtra(BillingActivity.EXTRA_BUY_INTENT));
+
+        receiveResultInBillingActivity(billingActivityIntent, MockResponse.PURCHASE_ERROR);
+
+        subscriber.assertError(BillingException.class);
+        final BillingException exception = (BillingException) subscriber.getOnErrorEvents().get(0);
+        assertEquals(ResponseCode.ERROR, exception.getCode());
     }
 
     private void testPerformOwnedPurchase(final PurchaseType type) throws IntentSender.SendIntentException, InterruptedException {
@@ -166,7 +197,6 @@ public class PagoTest {
 
         final ShadowActivity shadowBillingActivity = Shadows.shadowOf(billingActivity);
 
-        // TODO: 25.07.16 is there better way to check startIntentSenderForResult?
         shadowBillingActivity.startActivityForResult(new Intent(), BillingActivity.REQUEST_CODE);
         shadowBillingActivity.receiveResult(new Intent(), Activity.RESULT_OK, result);
     }
