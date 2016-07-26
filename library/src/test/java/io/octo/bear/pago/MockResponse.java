@@ -9,10 +9,10 @@ import java.util.Random;
 import io.octo.bear.pago.model.entity.ResponseCode;
 
 import static io.octo.bear.pago.BillingServiceUtils.RESPONSE_CODE;
+import static io.octo.bear.pago.MockUtils.TEST_DEVELOPER_PAYLOAD;
+import static io.octo.bear.pago.MockUtils.TEST_SKU;
 import static io.octo.bear.pago.PerformPurchaseSingle.RESPONSE_INAPP_DATA_SIGNATURE;
 import static io.octo.bear.pago.PerformPurchaseSingle.RESPONSE_INAPP_PURCHASE_DATA;
-import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.TEST_DEVELOPER_PAYLOAD;
-import static io.octo.bear.pago.ShadowIInAppBillingServiceStub.TEST_SKU;
 
 /**
  * Created by shc on 22.07.16.
