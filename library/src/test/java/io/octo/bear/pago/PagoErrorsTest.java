@@ -1,22 +1,18 @@
 package io.octo.bear.pago;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Build;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.Robolectric;
 import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.RuntimeEnvironment;
-import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowActivity;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import io.octo.bear.pago.model.entity.Inventory;
 import io.octo.bear.pago.model.entity.Order;
@@ -107,7 +103,7 @@ public class PagoErrorsTest {
 
     @Test
     public void testPurchasesAreNotAvailable() {
-        final TestSubscriber<Boolean>  subscriber = new TestSubscriber<>();
+        final TestSubscriber<Boolean> subscriber = new TestSubscriber<>();
         new BillingAvailabilitySingle(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
         subscriber.assertError(BillingException.class);
         final BillingException exception = (BillingException) subscriber.getOnErrorEvents().get(0);
