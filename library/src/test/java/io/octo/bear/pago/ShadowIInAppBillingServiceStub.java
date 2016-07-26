@@ -1,6 +1,7 @@
 package io.octo.bear.pago;
 
 import android.content.IntentSender;
+import android.os.Bundle;
 import android.os.RemoteException;
 
 import com.android.vending.billing.IInAppBillingService;
@@ -9,24 +10,34 @@ import org.mockito.Mockito;
 import org.robolectric.annotation.Implementation;
 import org.robolectric.annotation.Implements;
 
-import io.octo.bear.pago.model.entity.PurchaseType;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 
-import static io.octo.bear.pago.MockUtils.TEST_DEVELOPER_PAYLOAD;
-import static io.octo.bear.pago.MockUtils.TEST_PURCHASE_TOKEN;
-import static io.octo.bear.pago.MockUtils.TEST_SKU;
-import static io.octo.bear.pago.MockUtils.createBuyIntentBundle;
-import static io.octo.bear.pago.MockUtils.createInventory;
-import static io.octo.bear.pago.MockUtils.createPurchasedListBundle;
-import static io.octo.bear.pago.MockUtils.createSkusInfoRequestBundle;
+import io.octo.bear.pago.model.entity.PurchaseType;
+import io.octo.bear.pago.model.entity.ResponseCode;
+
+import static io.octo.bear.pago.BillingServiceUtils.RESPONSE_CODE;
+import static io.octo.bear.pago.BillingServiceTestingUtils.PURCHASED_ITEM_COUNT;
+import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_DEVELOPER_PAYLOAD;
+import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_PURCHASE_TOKEN;
+import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_SKU;
+import static io.octo.bear.pago.BillingServiceTestingUtils.createBuyIntentResponseBundle;
+import static io.octo.bear.pago.BillingServiceTestingUtils.createProductDetailsRequestBundle;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 
 /**
  * Created by shc on 21.07.16.
+ *
+ * Shadow {@link com.android.vending.billing.IInAppBillingService.Stub} returning
+ * {@link IInAppBillingService}, that returns expected correct responses.
  */
 @Implements(IInAppBillingService.Stub.class)
 public class ShadowIInAppBillingServiceStub {
+
+    private static final String SKU_DETAILS_RESPONSE = "{\"productId\":\"%s\",\"type\":\"%s\",\"price\":\"$5.00\",\"title\":\"Example Title\",\"description\":\"This is an example description\"}";
 
     @SuppressWarnings("unused")
     @Implementation
@@ -57,7 +68,7 @@ public class ShadowIInAppBillingServiceStub {
                 .when(service)
                 .getPurchases(
                         eq(Pago.BILLING_API_VERSION),
-                        eq(PagoTest.PACKAGE_NAME),
+                        eq(PagoExpectedBehaviorTest.PACKAGE_NAME),
                         eq(type.value),
                         anyString());
     }
@@ -67,7 +78,7 @@ public class ShadowIInAppBillingServiceStub {
                 .when(service)
                 .consumePurchase(
                         eq(Pago.BILLING_API_VERSION),
-                        eq(PagoTest.PACKAGE_NAME),
+                        eq(PagoExpectedBehaviorTest.PACKAGE_NAME),
                         eq(TEST_PURCHASE_TOKEN));
 
     }
@@ -77,7 +88,7 @@ public class ShadowIInAppBillingServiceStub {
                 .when(service)
                 .isBillingSupported(
                         eq(Pago.BILLING_API_VERSION),
-                        eq(PagoTest.PACKAGE_NAME),
+                        eq(PagoExpectedBehaviorTest.PACKAGE_NAME),
                         eq(type.value));
     }
 
@@ -88,22 +99,51 @@ public class ShadowIInAppBillingServiceStub {
                 .when(service)
                 .getSkuDetails(
                         eq(Pago.BILLING_API_VERSION),
-                        eq(PagoTest.PACKAGE_NAME),
+                        eq(PagoExpectedBehaviorTest.PACKAGE_NAME),
                         eq(type.value),
-                        argThat(new BundleMatcher(createSkusInfoRequestBundle(TEST_SKU))));
+                        argThat(new BundleMatcher(createProductDetailsRequestBundle(TEST_SKU))));
 
     }
 
     private static void setupBuyIntentResponse(IInAppBillingService service, PurchaseType type) throws RemoteException, IntentSender.SendIntentException {
-        Mockito.doReturn(createBuyIntentBundle())
+        Mockito.doReturn(createBuyIntentResponseBundle())
                 .when(service)
                 .getBuyIntent(
                         eq(Pago.BILLING_API_VERSION),
-                        eq(PagoTest.PACKAGE_NAME),
+                        eq(PagoExpectedBehaviorTest.PACKAGE_NAME),
                         eq(TEST_SKU),
                         eq(type.value),
                         eq(TEST_DEVELOPER_PAYLOAD));
 
+    }
+
+    private static Bundle createPurchasedListBundle(final PurchaseType type) {
+        final ArrayList<String> ids = new ArrayList<>();
+        final ArrayList<String> details = new ArrayList<>();
+        final ArrayList<String> signatures = new ArrayList<>();
+        for (int i = 0; i < PURCHASED_ITEM_COUNT; i++) {
+            final String sku = "test.sku." + i;
+            ids.add(sku);
+            details.add(String.format(SKU_DETAILS_RESPONSE, sku, type.value));
+            signatures.add(String.valueOf(new Random(32).nextInt()));
+        }
+
+        final Bundle result = new Bundle();
+
+        result.putInt(RESPONSE_CODE, 0);
+        result.putStringArrayList(PurchasedItemsSingle.RESPONSE_INAPP_PURCHASE_ITEM_LIST, ids);
+        result.putStringArrayList(PurchasedItemsSingle.RESPONSE_INAPP_PURCHASE_DATA_LIST, details);
+        result.putStringArrayList(PurchasedItemsSingle.RESPONSE_INAPP_PURCHASE_SIGNATURE_LIST, signatures);
+
+        return result;
+    }
+
+    private static Bundle createInventory(final PurchaseType type) {
+        final Bundle result = new Bundle();
+        final String detailsJson = String.format(SKU_DETAILS_RESPONSE, TEST_SKU, type.value);
+        result.putInt(RESPONSE_CODE, ResponseCode.OK.code);
+        result.putStringArrayList(ProductDetailsSingle.RESPONSE_DETAILS_LIST, new ArrayList<>(Collections.singletonList(detailsJson)));
+        return result;
     }
 
 }

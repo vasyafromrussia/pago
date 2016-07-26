@@ -1,6 +1,7 @@
 package io.octo.bear.pago;
 
 import android.content.IntentSender;
+import android.os.Bundle;
 import android.os.RemoteException;
 
 import com.android.vending.billing.IInAppBillingService;
@@ -12,20 +13,22 @@ import org.robolectric.annotation.Implements;
 import io.octo.bear.pago.model.entity.PurchaseType;
 import io.octo.bear.pago.model.entity.ResponseCode;
 
-import static io.octo.bear.pago.MockUtils.ERROR_SKU;
-import static io.octo.bear.pago.MockUtils.OWNED_DEVELOPER_PAYLOAD;
-import static io.octo.bear.pago.MockUtils.OWNED_SKU;
-import static io.octo.bear.pago.MockUtils.TEST_DEVELOPER_PAYLOAD;
-import static io.octo.bear.pago.MockUtils.TEST_SKU;
-import static io.octo.bear.pago.MockUtils.createBuyIntentBundle;
-import static io.octo.bear.pago.MockUtils.createErrorBundle;
-import static io.octo.bear.pago.MockUtils.createSkusInfoRequestBundle;
+import static io.octo.bear.pago.BillingServiceUtils.RESPONSE_CODE;
+import static io.octo.bear.pago.BillingServiceTestingUtils.OWNED_DEVELOPER_PAYLOAD;
+import static io.octo.bear.pago.BillingServiceTestingUtils.OWNED_SKU;
+import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_DEVELOPER_PAYLOAD;
+import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_SKU;
+import static io.octo.bear.pago.BillingServiceTestingUtils.createBuyIntentResponseBundle;
+import static io.octo.bear.pago.BillingServiceTestingUtils.createProductDetailsRequestBundle;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 
 /**
  * Created by shc on 21.07.16.
+ *
+ * Shadow {@link com.android.vending.billing.IInAppBillingService.Stub} returning
+ * {@link IInAppBillingService}, that returns errors in responses.
  */
 @Implements(IInAppBillingService.Stub.class)
 public class ShadowFaultyIInAppBillingServiceStub {
@@ -59,7 +62,7 @@ public class ShadowFaultyIInAppBillingServiceStub {
                 .when(service)
                 .getPurchases(
                         eq(Pago.BILLING_API_VERSION),
-                        eq(PagoTest.PACKAGE_NAME),
+                        eq(PagoExpectedBehaviorTest.PACKAGE_NAME),
                         eq(type.value),
                         anyString());
     }
@@ -69,7 +72,7 @@ public class ShadowFaultyIInAppBillingServiceStub {
                 .when(service)
                 .consumePurchase(
                         eq(Pago.BILLING_API_VERSION),
-                        eq(PagoTest.PACKAGE_NAME),
+                        eq(PagoExpectedBehaviorTest.PACKAGE_NAME),
                         eq(null));
     }
 
@@ -78,7 +81,7 @@ public class ShadowFaultyIInAppBillingServiceStub {
                 .when(service)
                 .isBillingSupported(
                         eq(Pago.BILLING_API_VERSION),
-                        eq(PagoTest.PACKAGE_NAME),
+                        eq(PagoExpectedBehaviorTest.PACKAGE_NAME),
                         eq(type.value));
     }
 
@@ -89,9 +92,9 @@ public class ShadowFaultyIInAppBillingServiceStub {
                 .when(service)
                 .getSkuDetails(
                         eq(Pago.BILLING_API_VERSION),
-                        eq(PagoTest.PACKAGE_NAME),
+                        eq(PagoExpectedBehaviorTest.PACKAGE_NAME),
                         eq(type.value),
-                        argThat(new BundleMatcher(createSkusInfoRequestBundle(ERROR_SKU))));
+                        argThat(new BundleMatcher(createProductDetailsRequestBundle(TEST_SKU))));
     }
 
     private static void setupBuyIntentResponse(IInAppBillingService service, PurchaseType type) throws RemoteException, IntentSender.SendIntentException {
@@ -99,19 +102,25 @@ public class ShadowFaultyIInAppBillingServiceStub {
                 .when(service)
                 .getBuyIntent(
                         eq(Pago.BILLING_API_VERSION),
-                        eq(PagoTest.PACKAGE_NAME),
+                        eq(PagoExpectedBehaviorTest.PACKAGE_NAME),
                         eq(OWNED_SKU),
                         eq(type.value),
                         eq(OWNED_DEVELOPER_PAYLOAD));
 
-        Mockito.doReturn(createBuyIntentBundle())
+        Mockito.doReturn(createBuyIntentResponseBundle())
                 .when(service)
                 .getBuyIntent(
                         eq(Pago.BILLING_API_VERSION),
-                        eq(PagoTest.PACKAGE_NAME),
+                        eq(PagoExpectedBehaviorTest.PACKAGE_NAME),
                         eq(TEST_SKU),
                         eq(type.value),
                         eq(TEST_DEVELOPER_PAYLOAD));
+    }
+
+    private static Bundle createErrorBundle(final ResponseCode code) throws IntentSender.SendIntentException {
+        final Bundle result = new Bundle();
+        result.putInt(RESPONSE_CODE, code.code);
+        return result;
     }
 
 }

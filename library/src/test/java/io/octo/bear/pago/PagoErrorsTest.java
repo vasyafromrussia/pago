@@ -21,18 +21,18 @@ import io.octo.bear.pago.model.entity.ResponseCode;
 import io.octo.bear.pago.model.exception.BillingException;
 import rx.observers.TestSubscriber;
 
-import static io.octo.bear.pago.MockUtils.ERROR_SKU;
-import static io.octo.bear.pago.MockUtils.OWNED_DEVELOPER_PAYLOAD;
-import static io.octo.bear.pago.MockUtils.OWNED_SKU;
-import static io.octo.bear.pago.MockUtils.TEST_DEVELOPER_PAYLOAD;
-import static io.octo.bear.pago.MockUtils.TEST_SKU;
-import static io.octo.bear.pago.MockUtils.getBillingActivityIntent;
-import static io.octo.bear.pago.MockUtils.receiveResultInBillingActivity;
+import static io.octo.bear.pago.BillingServiceUtils.RESPONSE_CODE;
+import static io.octo.bear.pago.BillingServiceTestingUtils.OWNED_DEVELOPER_PAYLOAD;
+import static io.octo.bear.pago.BillingServiceTestingUtils.OWNED_SKU;
+import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_DEVELOPER_PAYLOAD;
+import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_SKU;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
  * Created by shc on 21.07.16.
+ *
+ * Test set for {@link com.android.vending.billing.IInAppBillingService} error responses.
  */
 @RunWith(RobolectricGradleTestRunner.class)
 @Config(
@@ -42,7 +42,7 @@ import static org.junit.Assert.assertNotNull;
                 ShadowFaultyIInAppBillingServiceStub.class
         }
 )
-public class PagoErrorsTest {
+public class PagoErrorsTest extends BasePagoTest {
 
     @Test
     public void testErrorDuringPurchaseFlow() throws IntentSender.SendIntentException, InterruptedException {
@@ -59,11 +59,11 @@ public class PagoErrorsTest {
         performPurchaseSingle.subscribe(subscriber);
 
         // check if BillingActivity was started within X seconds
-        final Intent billingActivityIntent = getBillingActivityIntent(shadowActivity);
+        final Intent billingActivityIntent = getBillingActivityIntent(shadowActivity, 10);
         assertNotNull(billingActivityIntent);
         assertNotNull(billingActivityIntent.getParcelableExtra(BillingActivity.EXTRA_BUY_INTENT));
 
-        receiveResultInBillingActivity(billingActivityIntent, MockResponse.PURCHASE_ERROR);
+        receiveResultInBillingActivity(billingActivityIntent, getErrorIntent());
 
         subscriber.assertError(BillingException.class);
         final BillingException exception = (BillingException) subscriber.getOnErrorEvents().get(0);
@@ -95,7 +95,7 @@ public class PagoErrorsTest {
     }
 
     @Test
-    public void testErrorOnObtainedPurchasedItemsList() {
+    public void testErrorOnRequestPurchasedItemsList() {
         final TestSubscriber<List<Order>> subscriber = new TestSubscriber<>();
         new PurchasedItemsSingle(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
         subscriber.assertError(BillingException.class);
@@ -111,11 +111,15 @@ public class PagoErrorsTest {
     }
 
     @Test
-    public void testOnObtainProductDetails() {
+    public void testErrorWhileRequestProductDetails() {
         final TestSubscriber<Inventory> subscriber = new TestSubscriber<>();
-        new ProductDetailsSingle(RuntimeEnvironment.application, PurchaseType.INAPP, Collections.singletonList(ERROR_SKU))
+        new ProductDetailsSingle(RuntimeEnvironment.application, PurchaseType.INAPP, Collections.singletonList(TEST_SKU))
                 .subscribe(subscriber);
         subscriber.assertError(BillingException.class);
+    }
+
+    private static Intent getErrorIntent() {
+        return new Intent().putExtra(RESPONSE_CODE, ResponseCode.ERROR.code);
     }
 
 }
