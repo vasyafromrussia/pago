@@ -12,7 +12,7 @@ import io.octo.bear.pago.model.exception.BillingException;
  */
 final class BillingServiceUtils {
 
-    private static final String RESPONSE_CODE = "RESPONSE_CODE";
+    static final String RESPONSE_CODE = "RESPONSE_CODE";
 
     static final Gson GSON = new Gson();
 
