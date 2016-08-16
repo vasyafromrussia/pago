@@ -24,8 +24,8 @@ import static io.octo.bear.pago.BillingServiceUtils.retrieveResponseCode;
 
 class ProductDetailsSingle extends Single<Inventory> {
 
-    private static final String RESPONSE_DETAILS_LIST = "DETAILS_LIST";
-    private static final String EXTRA_ITEM_ID_LIST = "ITEM_ID_LIST";
+    static final String RESPONSE_DETAILS_LIST = "DETAILS_LIST";
+    static final String EXTRA_ITEM_ID_LIST = "ITEM_ID_LIST";
 
     ProductDetailsSingle(final Context context, final PurchaseType type, final List<String> purchaseIds) {
         super(subscriber -> new BillingServiceConnection(context, service -> {

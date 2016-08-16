@@ -27,9 +27,9 @@ import static io.octo.bear.pago.BillingServiceUtils.retrieveResponseCode;
 
 class PerformPurchaseSingle extends Single<Order> {
 
-    private static final String RESPONSE_BUY_INTENT = "BUY_INTENT";
-    private static final String RESPONSE_INAPP_PURCHASE_DATA = "INAPP_PURCHASE_DATA";
-    private static final String RESPONSE_INAPP_DATA_SIGNATURE = "INAPP_DATA_SIGNATURE";
+    static final String RESPONSE_BUY_INTENT = "BUY_INTENT";
+    static final String RESPONSE_INAPP_PURCHASE_DATA = "INAPP_PURCHASE_DATA";
+    static final String RESPONSE_INAPP_DATA_SIGNATURE = "INAPP_DATA_SIGNATURE";
 
     PerformPurchaseSingle(final Context context, final PurchaseType type, final String sku, String payload) {
         super(subscriber -> new BillingServiceConnection(context, service -> {
