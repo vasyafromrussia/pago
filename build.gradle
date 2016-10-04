@@ -7,6 +7,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:2.2.0'
         classpath 'me.tatarka.retrolambda.projectlombok:lombok.ast:0.2.3.a2'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
     }
     configurations.classpath.exclude group: 'com.android.tools.external.lombok'
 }
