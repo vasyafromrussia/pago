@@ -20,6 +20,7 @@ repositories {
 
 apply plugin: 'com.android.library'
 apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'jacoco'
 
 android {
@@ -102,4 +103,14 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "testDebug") {
         xml.enabled = true
         html.enabled = true
     }
+}
+
+// build a jar with source files
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+artifacts {
+    archives sourcesJar
 }
