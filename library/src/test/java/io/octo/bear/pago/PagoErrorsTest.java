@@ -50,13 +50,12 @@ public class PagoErrorsTest extends BasePagoTest {
 
         //start purchase flow
         final TestSubscriber<Order> subscriber = new TestSubscriber<>();
-        final PerformPurchaseSingle performPurchaseSingle = new PerformPurchaseSingle(
+        PerformPurchase.create(
                 RuntimeEnvironment.application,
                 PurchaseType.INAPP,
                 TEST_SKU,
                 TEST_DEVELOPER_PAYLOAD
-        );
-        performPurchaseSingle.subscribe(subscriber);
+        ).subscribe(subscriber);
 
         // check if BillingActivity was started within X seconds
         final Intent billingActivityIntent = getBillingActivityIntent(shadowActivity, 10);
@@ -74,13 +73,12 @@ public class PagoErrorsTest extends BasePagoTest {
     public void testPurchaseOwnedProduct() throws InterruptedException, IntentSender.SendIntentException {
         //start purchase flow
         final TestSubscriber<Order> subscriber = new TestSubscriber<>();
-        final PerformPurchaseSingle performPurchaseSingle = new PerformPurchaseSingle(
+        PerformPurchase.create(
                 RuntimeEnvironment.application,
                 PurchaseType.INAPP,
                 OWNED_SKU,
                 OWNED_DEVELOPER_PAYLOAD
-        );
-        performPurchaseSingle.subscribe(subscriber);
+        ).subscribe(subscriber);
 
         subscriber.assertError(BillingException.class);
         final BillingException exception = (BillingException) subscriber.getOnErrorEvents().get(0);
@@ -90,21 +88,21 @@ public class PagoErrorsTest extends BasePagoTest {
     @Test
     public void testErrorOnConsumption() {
         final TestSubscriber<Void> subscriber = new TestSubscriber<>();
-        new ConsumePurchaseCompletable(RuntimeEnvironment.application, null).subscribe(subscriber);
+        ConsumePurchase.create(RuntimeEnvironment.application, null).subscribe(subscriber);
         subscriber.assertError(BillingException.class);
     }
 
     @Test
     public void testErrorOnRequestPurchasedItemsList() {
         final TestSubscriber<List<Order>> subscriber = new TestSubscriber<>();
-        new PurchasedItemsSingle(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
+        PurchasedItems.create(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
         subscriber.assertError(BillingException.class);
     }
 
     @Test
     public void testPurchasesAreNotAvailable() {
         final TestSubscriber<Boolean> subscriber = new TestSubscriber<>();
-        new BillingAvailabilitySingle(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
+        BillingAvailability.create(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
         subscriber.assertError(BillingException.class);
         final BillingException exception = (BillingException) subscriber.getOnErrorEvents().get(0);
         assertEquals(ResponseCode.BILLING_UNAVAILABLE, exception.getCode());
@@ -113,7 +111,7 @@ public class PagoErrorsTest extends BasePagoTest {
     @Test
     public void testErrorWhileRequestProductDetails() {
         final TestSubscriber<Inventory> subscriber = new TestSubscriber<>();
-        new ProductDetailsSingle(RuntimeEnvironment.application, PurchaseType.INAPP, Collections.singletonList(TEST_SKU))
+        ProductDetails.create(RuntimeEnvironment.application, PurchaseType.INAPP, Collections.singletonList(TEST_SKU))
                 .subscribe(subscriber);
         subscriber.assertError(BillingException.class);
     }

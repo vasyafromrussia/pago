@@ -26,8 +26,8 @@ import static io.octo.bear.pago.BillingServiceTestingUtils.PURCHASED_ITEM_COUNT;
 import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_DEVELOPER_PAYLOAD;
 import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_PURCHASE_TOKEN;
 import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_SKU;
-import static io.octo.bear.pago.PerformPurchaseSingle.RESPONSE_INAPP_DATA_SIGNATURE;
-import static io.octo.bear.pago.PerformPurchaseSingle.RESPONSE_INAPP_PURCHASE_DATA;
+import static io.octo.bear.pago.PerformPurchase.RESPONSE_INAPP_DATA_SIGNATURE;
+import static io.octo.bear.pago.PerformPurchase.RESPONSE_INAPP_PURCHASE_DATA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -53,7 +53,7 @@ public class PagoExpectedBehaviorTest extends BasePagoTest {
     @Test
     public void testPurchasesAvailabilitySingle() {
         final TestSubscriber<Boolean> subscriber = new TestSubscriber<>();
-        new BillingAvailabilitySingle(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
+        BillingAvailability.create(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
         subscriber.assertNoErrors();
         subscriber.assertValue(true);
     }
@@ -62,7 +62,7 @@ public class PagoExpectedBehaviorTest extends BasePagoTest {
     public void testObtainProductDetailsSingle() {
         final TestSubscriber<Inventory> subscriber = new TestSubscriber<>();
         final String productId = TEST_SKU;
-        new ProductDetailsSingle(RuntimeEnvironment.application, PurchaseType.INAPP, Collections.singletonList(productId))
+        ProductDetails.create(RuntimeEnvironment.application, PurchaseType.INAPP, Collections.singletonList(productId))
                 .subscribe(subscriber);
         subscriber.assertNoErrors();
         subscriber.assertValueCount(1);
@@ -76,13 +76,12 @@ public class PagoExpectedBehaviorTest extends BasePagoTest {
 
         //start purchase flow
         final TestSubscriber<Order> subscriber = new TestSubscriber<>();
-        final PerformPurchaseSingle performPurchaseSingle = new PerformPurchaseSingle(
+        PerformPurchase.create(
                 RuntimeEnvironment.application,
                 PurchaseType.INAPP,
                 TEST_SKU,
                 TEST_DEVELOPER_PAYLOAD
-        );
-        performPurchaseSingle.subscribe(subscriber);
+        ).subscribe(subscriber);
 
         // check if BillingActivity was started within X seconds
         final Intent billingActivityIntent = getBillingActivityIntent(shadowActivity, 10);
@@ -101,7 +100,7 @@ public class PagoExpectedBehaviorTest extends BasePagoTest {
     @Test
     public void testConsumptionSingle() {
         final TestSubscriber<Void> subscriber = new TestSubscriber<>();
-        new ConsumePurchaseCompletable(RuntimeEnvironment.application, TEST_PURCHASE_TOKEN).subscribe(subscriber);
+        ConsumePurchase.create(RuntimeEnvironment.application, TEST_PURCHASE_TOKEN).subscribe(subscriber);
         subscriber.assertNoErrors();
         subscriber.assertCompleted();
     }
@@ -109,7 +108,7 @@ public class PagoExpectedBehaviorTest extends BasePagoTest {
     @Test
     public void testObtainPurchasedProductsListSingle() {
         final TestSubscriber<List<Order>> subscriber = new TestSubscriber<>();
-        new PurchasedItemsSingle(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
+        PurchasedItems.create(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
         subscriber.assertNoErrors();
         final List<Order> orders = subscriber.getOnNextEvents().get(0);
         assertNotNull(orders);

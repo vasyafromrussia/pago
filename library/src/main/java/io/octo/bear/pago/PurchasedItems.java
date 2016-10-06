@@ -21,15 +21,15 @@ import static io.octo.bear.pago.BillingServiceUtils.retrieveResponseCode;
  * Created by shc on 18.07.16.
  */
 
-class PurchasedItemsSingle extends Single<List<Order>> {
+class PurchasedItems {
 
     static final String RESPONSE_INAPP_PURCHASE_ITEM_LIST = "INAPP_PURCHASE_ITEM_LIST";
     static final String RESPONSE_INAPP_PURCHASE_DATA_LIST = "INAPP_PURCHASE_DATA_LIST";
     static final String RESPONSE_INAPP_PURCHASE_SIGNATURE_LIST = "INAPP_DATA_SIGNATURE_LIST";
     static final String RESPONSE_INAPP_CONTINUATION_TOKEN = "INAPP_CONTINUATION_TOKEN";
 
-    PurchasedItemsSingle(final Context context, final PurchaseType type) {
-        super(subscriber ->
+    public static Single<List<Order>> create(final Context context, final PurchaseType type) {
+        return Single.create(subscriber ->
                 new BillingServiceConnection(context, service -> {
                     try {
                         final Bundle purchases =

@@ -38,7 +38,7 @@ public class Pago {
      * @return single that emits {@code true} value if supported and Exception otherwise
      */
     public Single<Boolean> checkPurchasesAvailability() {
-        return new BillingAvailabilitySingle(context, PurchaseType.INAPP);
+        return BillingAvailability.create(context, PurchaseType.INAPP);
     }
 
     /**
@@ -47,7 +47,7 @@ public class Pago {
      * @return single that emits {@code true} value if supported and Exception otherwise
      */
     public Single<Boolean> checkSubscriptionAvailability() {
-        return new BillingAvailabilitySingle(context, PurchaseType.SUBSCRIPTION);
+        return BillingAvailability.create(context, PurchaseType.SUBSCRIPTION);
     }
 
     /**
@@ -57,7 +57,7 @@ public class Pago {
      * @return {@link Inventory}, that represents collection of described products
      */
     public Single<Inventory> obtainProductsDetails(final List<String> skus) {
-        return new ProductDetailsSingle(context, PurchaseType.INAPP, skus);
+        return ProductDetails.create(context, PurchaseType.INAPP, skus);
     }
 
     /**
@@ -67,7 +67,7 @@ public class Pago {
      * @return {@link Inventory}, that represents collection of described products
      */
     public Single<Inventory> obtainSubscriptionsDetails(final List<String> skus) {
-        return new ProductDetailsSingle(context, PurchaseType.SUBSCRIPTION, skus);
+        return ProductDetails.create(context, PurchaseType.SUBSCRIPTION, skus);
     }
 
     /**
@@ -78,7 +78,7 @@ public class Pago {
      * @return {@link Single} emits {@link Order} containing purchased item info and signature
      */
     public Single<Order> purchaseProduct(final String sku, final String payload) {
-        return new PerformPurchaseSingle(context, PurchaseType.INAPP, sku, payload);
+        return PerformPurchase.create(context, PurchaseType.INAPP, sku, payload);
     }
 
     /**
@@ -89,7 +89,7 @@ public class Pago {
      * @return {@link Single} that emits {@link Order} containing purchased item info and signature
      */
     public Single<Order> purchaseSubscription(final String sku, final String payload) {
-        return new PerformPurchaseSingle(context, PurchaseType.SUBSCRIPTION, sku, payload);
+        return PerformPurchase.create(context, PurchaseType.SUBSCRIPTION, sku, payload);
     }
 
     /**
@@ -98,7 +98,7 @@ public class Pago {
      * @return {@link Single} that emits {@link Order} containing purchased products data
      */
     public Single<List<Order>> obtainPurchasedProducts() {
-        return new PurchasedItemsSingle(context, PurchaseType.INAPP);
+        return PurchasedItems.create(context, PurchaseType.INAPP);
     }
 
     /**
@@ -107,7 +107,7 @@ public class Pago {
      * @return {@link Single} that emits {@link Order} containing purchased subscriptions data
      */
     public Single<List<Order>> obtainPurchasedSubscriptions() {
-        return new PurchasedItemsSingle(context, PurchaseType.SUBSCRIPTION);
+        return PurchasedItems.create(context, PurchaseType.SUBSCRIPTION);
     }
 
     /**
@@ -120,7 +120,7 @@ public class Pago {
      * @return {@link Completable} that notifies you about either successful consumption, or error
      */
     public Completable consumeProduct(final String purchaseToken) {
-        return new ConsumePurchaseCompletable(context, purchaseToken);
+        return ConsumePurchase.create(context, purchaseToken);
     }
 
 }

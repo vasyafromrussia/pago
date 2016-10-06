@@ -131,9 +131,9 @@ public class ShadowIInAppBillingServiceStub {
         final Bundle result = new Bundle();
 
         result.putInt(RESPONSE_CODE, 0);
-        result.putStringArrayList(PurchasedItemsSingle.RESPONSE_INAPP_PURCHASE_ITEM_LIST, ids);
-        result.putStringArrayList(PurchasedItemsSingle.RESPONSE_INAPP_PURCHASE_DATA_LIST, details);
-        result.putStringArrayList(PurchasedItemsSingle.RESPONSE_INAPP_PURCHASE_SIGNATURE_LIST, signatures);
+        result.putStringArrayList(PurchasedItems.RESPONSE_INAPP_PURCHASE_ITEM_LIST, ids);
+        result.putStringArrayList(PurchasedItems.RESPONSE_INAPP_PURCHASE_DATA_LIST, details);
+        result.putStringArrayList(PurchasedItems.RESPONSE_INAPP_PURCHASE_SIGNATURE_LIST, signatures);
 
         return result;
     }
@@ -142,7 +142,7 @@ public class ShadowIInAppBillingServiceStub {
         final Bundle result = new Bundle();
         final String detailsJson = String.format(SKU_DETAILS_RESPONSE, TEST_SKU, type.value);
         result.putInt(RESPONSE_CODE, ResponseCode.OK.code);
-        result.putStringArrayList(ProductDetailsSingle.RESPONSE_DETAILS_LIST, new ArrayList<>(Collections.singletonList(detailsJson)));
+        result.putStringArrayList(ProductDetails.RESPONSE_DETAILS_LIST, new ArrayList<>(Collections.singletonList(detailsJson)));
         return result;
     }
 

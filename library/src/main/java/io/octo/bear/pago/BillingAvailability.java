@@ -10,11 +10,11 @@ import rx.Single;
 /**
  * Created by shc on 19.07.16.
  */
+class BillingAvailability {
 
-class BillingAvailabilitySingle extends Single<Boolean> {
-
-    BillingAvailabilitySingle(final Context context, final PurchaseType type) {
-        super(subscriber -> new BillingServiceConnection(context, service -> {
+    public static Single<Boolean> create(final Context context, final PurchaseType type) {
+        return Single.create(subscriber ->
+                new BillingServiceConnection(context, service -> {
                     try {
                         final int codeNumber = service.isBillingSupported(Pago.BILLING_API_VERSION, context.getPackageName(), type.value);
                         final ResponseCode code = ResponseCode.getByCode(codeNumber);

@@ -36,7 +36,7 @@ class BillingServiceTestingUtils {
      */
     static Bundle createProductDetailsRequestBundle(final String sku) {
         final Bundle bundle = new Bundle();
-        bundle.putStringArrayList(ProductDetailsSingle.EXTRA_ITEM_ID_LIST, new ArrayList<>(Collections.singletonList(sku)));
+        bundle.putStringArrayList(ProductDetails.EXTRA_ITEM_ID_LIST, new ArrayList<>(Collections.singletonList(sku)));
         return bundle;
     }
 
@@ -47,7 +47,7 @@ class BillingServiceTestingUtils {
     static Bundle createBuyIntentResponseBundle() throws IntentSender.SendIntentException {
         final Bundle result = new Bundle();
         result.putInt(RESPONSE_CODE, 0);
-        result.putParcelable(PerformPurchaseSingle.RESPONSE_BUY_INTENT, createResponseBuyIntent());
+        result.putParcelable(PerformPurchase.RESPONSE_BUY_INTENT, createResponseBuyIntent());
         return result;
     }
 

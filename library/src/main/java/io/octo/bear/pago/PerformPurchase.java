@@ -25,14 +25,14 @@ import static io.octo.bear.pago.BillingServiceUtils.retrieveResponseCode;
  * Created by shc on 14.07.16.
  */
 
-class PerformPurchaseSingle extends Single<Order> {
+class PerformPurchase {
 
     static final String RESPONSE_BUY_INTENT = "BUY_INTENT";
     static final String RESPONSE_INAPP_PURCHASE_DATA = "INAPP_PURCHASE_DATA";
     static final String RESPONSE_INAPP_DATA_SIGNATURE = "INAPP_DATA_SIGNATURE";
 
-    PerformPurchaseSingle(final Context context, final PurchaseType type, final String sku, String payload) {
-        super(subscriber -> new BillingServiceConnection(context, service -> {
+    public static Single<Order> create(final Context context, final PurchaseType type, final String sku, String payload) {
+        return Single.create(subscriber -> new BillingServiceConnection(context, service -> {
                     try {
                         final Bundle buyIntentBundle = service.getBuyIntent(Pago.BILLING_API_VERSION, context.getPackageName(),
                                 sku, type.value, payload);
