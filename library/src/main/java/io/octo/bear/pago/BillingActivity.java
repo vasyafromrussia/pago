@@ -10,8 +10,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
-
 /**
  * Created by shc on 18.07.16.
  */
@@ -30,7 +28,6 @@ public class BillingActivity extends Activity {
     static void start(@NonNull final Context context, @NonNull final PendingIntent buyIntent) {
         final Intent intent = new Intent(context, BillingActivity.class);
         intent.putExtra(EXTRA_BUY_INTENT, buyIntent);
-        intent.setFlags(FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
     }
 
