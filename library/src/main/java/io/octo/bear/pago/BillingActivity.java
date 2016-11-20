@@ -58,5 +58,6 @@ public class BillingActivity extends Activity {
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+        finish();
     }
 }
