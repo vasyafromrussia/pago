@@ -44,7 +44,8 @@ class PurchasedItemsSingle extends Single<List<Order>> {
 
                         final List<Order> result = new ArrayList<>();
                         for (int i = 0; i < data.size(); i++) {
-                            result.add(new Order(GSON.fromJson(data.get(i), Purchase.class), signatures.get(i)));
+                            String originalJson = data.get(i);
+                            result.add(new Order(GSON.fromJson(originalJson, Purchase.class), signatures.get(i), originalJson));
                         }
                         subscriber.onSuccess(result);
                     } catch (BillingException e) {

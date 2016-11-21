@@ -6,6 +6,7 @@ package io.octo.bear.pago.model.entity;
 
 public class Purchase {
 
+    public final boolean autoRenewing;
     public final String orderId;
     public final String packageName;
     public final String productId;
@@ -15,13 +16,16 @@ public class Purchase {
     public final String purchaseToken;
 
     public Purchase(
+            boolean autoRenewing,
             String orderId,
             String packageName,
             String productId,
             long purchaseTime,
             int purchaseState,
             String developerPayload,
-            String purchaseToken) {
+            String purchaseToken
+    ) {
+        this.autoRenewing = autoRenewing;
         this.orderId = orderId;
         this.packageName = packageName;
         this.productId = productId;

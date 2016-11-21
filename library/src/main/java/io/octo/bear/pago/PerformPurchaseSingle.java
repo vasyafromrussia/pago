@@ -81,8 +81,9 @@ class PerformPurchaseSingle extends Single<Order> {
 
                     checkResponseAndThrowIfError(code);
 
-                    final Purchase purchase = GSON.fromJson(result.getString(RESPONSE_INAPP_PURCHASE_DATA), Purchase.class);
-                    final Order order = new Order(purchase, result.getString(RESPONSE_INAPP_DATA_SIGNATURE));
+                    String originalJson = result.getString(RESPONSE_INAPP_PURCHASE_DATA);
+                    final Purchase purchase = GSON.fromJson(originalJson, Purchase.class);
+                    final Order order = new Order(purchase, result.getString(RESPONSE_INAPP_DATA_SIGNATURE), originalJson);
 
                     final boolean purchaseDataIsCorrect = TextUtils.equals(payload, purchase.developerPayload);
 
