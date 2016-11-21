@@ -27,6 +27,7 @@ public class BillingActivity extends Activity {
 
     static void start(@NonNull final Context context, @NonNull final PendingIntent buyIntent) {
         final Intent intent = new Intent(context, BillingActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra(EXTRA_BUY_INTENT, buyIntent);
         context.startActivity(intent);
     }
