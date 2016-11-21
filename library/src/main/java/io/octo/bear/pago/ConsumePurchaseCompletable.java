@@ -1,6 +1,6 @@
 package io.octo.bear.pago;
 
-import android.content.Context;
+import android.app.Activity;
 
 import io.octo.bear.pago.model.entity.ResponseCode;
 import io.octo.bear.pago.model.exception.BillingException;
@@ -14,10 +14,10 @@ import static io.octo.bear.pago.BillingServiceUtils.checkResponseAndThrowIfError
 
 class ConsumePurchaseCompletable extends Completable {
 
-    ConsumePurchaseCompletable(final Context context, final String purchaseToken) {
-        super(subscriber -> new BillingServiceConnection(context, service -> {
+    ConsumePurchaseCompletable(final Activity activity, final String purchaseToken) {
+        super(subscriber -> new BillingServiceConnection(activity, service -> {
             try {
-                final int codeNumber = service.consumePurchase(Pago.BILLING_API_VERSION, context.getPackageName(), purchaseToken);
+                final int codeNumber = service.consumePurchase(Pago.BILLING_API_VERSION, activity.getPackageName(), purchaseToken);
                 final ResponseCode code = ResponseCode.getByCode(codeNumber);
 
                 checkResponseAndThrowIfError(code);

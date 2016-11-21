@@ -1,6 +1,6 @@
 package io.octo.bear.pago;
 
-import android.content.Context;
+import android.app.Activity;
 
 import io.octo.bear.pago.model.entity.PurchaseType;
 import io.octo.bear.pago.model.entity.ResponseCode;
@@ -13,10 +13,10 @@ import rx.Single;
 
 class BillingAvailabilitySingle extends Single<Boolean> {
 
-    BillingAvailabilitySingle(final Context context, final PurchaseType type) {
-        super(subscriber -> new BillingServiceConnection(context, service -> {
+    BillingAvailabilitySingle(final Activity activity, final PurchaseType type) {
+        super(subscriber -> new BillingServiceConnection(activity, service -> {
                     try {
-                        final int codeNumber = service.isBillingSupported(Pago.BILLING_API_VERSION, context.getPackageName(), type.value);
+                        final int codeNumber = service.isBillingSupported(Pago.BILLING_API_VERSION, activity.getPackageName(), type.value);
                         final ResponseCode code = ResponseCode.getByCode(codeNumber);
 
                         if (code == ResponseCode.OK) {

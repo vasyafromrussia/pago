@@ -1,6 +1,6 @@
 package io.octo.bear.pago;
 
-import android.content.Context;
+import android.app.Activity;
 
 import java.util.List;
 
@@ -23,13 +23,13 @@ public class Pago {
 
     static final int BILLING_API_VERSION = 3;
 
-    private final Context context;
+    private final Activity activity;
 
     /**
-     * @param context the context is needed to start IAB-related services
+     * @param activity the activity is needed to start IAB-related services
      */
-    public Pago(Context context) {
-        this.context = context;
+    public Pago(Activity activity) {
+        this.activity = activity;
     }
 
     /**
@@ -38,7 +38,7 @@ public class Pago {
      * @return single that emits {@code true} value if supported and Exception otherwise
      */
     public Single<Boolean> checkPurchasesAvailability() {
-        return new BillingAvailabilitySingle(context, PurchaseType.INAPP);
+        return new BillingAvailabilitySingle(activity, PurchaseType.INAPP);
     }
 
     /**
@@ -47,7 +47,7 @@ public class Pago {
      * @return single that emits {@code true} value if supported and Exception otherwise
      */
     public Single<Boolean> checkSubscriptionAvailability() {
-        return new BillingAvailabilitySingle(context, PurchaseType.SUBSCRIPTION);
+        return new BillingAvailabilitySingle(activity, PurchaseType.SUBSCRIPTION);
     }
 
     /**
@@ -57,7 +57,7 @@ public class Pago {
      * @return {@link Inventory}, that represents collection of described products
      */
     public Single<Inventory> obtainProductsDetails(final List<String> skus) {
-        return new ProductDetailsSingle(context, PurchaseType.INAPP, skus);
+        return new ProductDetailsSingle(activity, PurchaseType.INAPP, skus);
     }
 
     /**
@@ -67,7 +67,7 @@ public class Pago {
      * @return {@link Inventory}, that represents collection of described products
      */
     public Single<Inventory> obtainSubscriptionsDetails(final List<String> skus) {
-        return new ProductDetailsSingle(context, PurchaseType.SUBSCRIPTION, skus);
+        return new ProductDetailsSingle(activity, PurchaseType.SUBSCRIPTION, skus);
     }
 
     /**
@@ -78,7 +78,7 @@ public class Pago {
      * @return {@link Single} emits {@link Order} containing purchased item info and signature
      */
     public Single<Order> purchaseProduct(final String sku, final String payload) {
-        return new PerformPurchaseSingle(context, PurchaseType.INAPP, sku, payload);
+        return new PerformPurchaseSingle(activity, PurchaseType.INAPP, sku, payload);
     }
 
     /**
@@ -89,7 +89,7 @@ public class Pago {
      * @return {@link Single} that emits {@link Order} containing purchased item info and signature
      */
     public Single<Order> purchaseSubscription(final String sku, final String payload) {
-        return new PerformPurchaseSingle(context, PurchaseType.SUBSCRIPTION, sku, payload);
+        return new PerformPurchaseSingle(activity, PurchaseType.SUBSCRIPTION, sku, payload);
     }
 
     /**
@@ -98,7 +98,7 @@ public class Pago {
      * @return {@link Single} that emits {@link Order} containing purchased products data
      */
     public Single<List<Order>> obtainPurchasedProducts() {
-        return new PurchasedItemsSingle(context, PurchaseType.INAPP);
+        return new PurchasedItemsSingle(activity, PurchaseType.INAPP);
     }
 
     /**
@@ -107,7 +107,7 @@ public class Pago {
      * @return {@link Single} that emits {@link Order} containing purchased subscriptions data
      */
     public Single<List<Order>> obtainPurchasedSubscriptions() {
-        return new PurchasedItemsSingle(context, PurchaseType.SUBSCRIPTION);
+        return new PurchasedItemsSingle(activity, PurchaseType.SUBSCRIPTION);
     }
 
     /**
@@ -120,7 +120,7 @@ public class Pago {
      * @return {@link Completable} that notifies you about either successful consumption, or error
      */
     public Completable consumeProduct(final String purchaseToken) {
-        return new ConsumePurchaseCompletable(context, purchaseToken);
+        return new ConsumePurchaseCompletable(activity, purchaseToken);
     }
 
 }

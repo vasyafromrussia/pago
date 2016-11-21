@@ -6,8 +6,8 @@ import android.os.Build;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 import org.robolectric.RobolectricGradleTestRunner;
-import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowActivity;
 
@@ -21,11 +21,11 @@ import io.octo.bear.pago.model.entity.ResponseCode;
 import io.octo.bear.pago.model.exception.BillingException;
 import rx.observers.TestSubscriber;
 
-import static io.octo.bear.pago.BillingServiceUtils.RESPONSE_CODE;
 import static io.octo.bear.pago.BillingServiceTestingUtils.OWNED_DEVELOPER_PAYLOAD;
 import static io.octo.bear.pago.BillingServiceTestingUtils.OWNED_SKU;
 import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_DEVELOPER_PAYLOAD;
 import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_SKU;
+import static io.octo.bear.pago.BillingServiceUtils.RESPONSE_CODE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -46,12 +46,14 @@ public class PagoErrorsTest extends BasePagoTest {
 
     @Test
     public void testErrorDuringPurchaseFlow() throws IntentSender.SendIntentException, InterruptedException {
+        TestActivity testActivity = Robolectric.buildActivity(TestActivity.class).create().get();
+
         final ShadowActivity shadowActivity = new ShadowActivity();
 
         //start purchase flow
         final TestSubscriber<Order> subscriber = new TestSubscriber<>();
         final PerformPurchaseSingle performPurchaseSingle = new PerformPurchaseSingle(
-                RuntimeEnvironment.application,
+                testActivity,
                 PurchaseType.INAPP,
                 TEST_SKU,
                 TEST_DEVELOPER_PAYLOAD
@@ -72,10 +74,12 @@ public class PagoErrorsTest extends BasePagoTest {
 
     @Test
     public void testPurchaseOwnedProduct() throws InterruptedException, IntentSender.SendIntentException {
+        TestActivity testActivity = Robolectric.buildActivity(TestActivity.class).create().get();
+
         //start purchase flow
         final TestSubscriber<Order> subscriber = new TestSubscriber<>();
         final PerformPurchaseSingle performPurchaseSingle = new PerformPurchaseSingle(
-                RuntimeEnvironment.application,
+                testActivity,
                 PurchaseType.INAPP,
                 OWNED_SKU,
                 OWNED_DEVELOPER_PAYLOAD
@@ -89,22 +93,25 @@ public class PagoErrorsTest extends BasePagoTest {
 
     @Test
     public void testErrorOnConsumption() {
+        TestActivity testActivity = Robolectric.buildActivity(TestActivity.class).create().get();
         final TestSubscriber<Void> subscriber = new TestSubscriber<>();
-        new ConsumePurchaseCompletable(RuntimeEnvironment.application, null).subscribe(subscriber);
+        new ConsumePurchaseCompletable(testActivity, null).subscribe(subscriber);
         subscriber.assertError(BillingException.class);
     }
 
     @Test
     public void testErrorOnRequestPurchasedItemsList() {
+        TestActivity testActivity = Robolectric.buildActivity(TestActivity.class).create().get();
         final TestSubscriber<List<Order>> subscriber = new TestSubscriber<>();
-        new PurchasedItemsSingle(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
+        new PurchasedItemsSingle(testActivity, PurchaseType.INAPP).subscribe(subscriber);
         subscriber.assertError(BillingException.class);
     }
 
     @Test
     public void testPurchasesAreNotAvailable() {
+        TestActivity testActivity = Robolectric.buildActivity(TestActivity.class).create().get();
         final TestSubscriber<Boolean> subscriber = new TestSubscriber<>();
-        new BillingAvailabilitySingle(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
+        new BillingAvailabilitySingle(testActivity, PurchaseType.INAPP).subscribe(subscriber);
         subscriber.assertError(BillingException.class);
         final BillingException exception = (BillingException) subscriber.getOnErrorEvents().get(0);
         assertEquals(ResponseCode.BILLING_UNAVAILABLE, exception.getCode());
@@ -112,9 +119,9 @@ public class PagoErrorsTest extends BasePagoTest {
 
     @Test
     public void testErrorWhileRequestProductDetails() {
+        TestActivity testActivity = Robolectric.buildActivity(TestActivity.class).create().get();
         final TestSubscriber<Inventory> subscriber = new TestSubscriber<>();
-        new ProductDetailsSingle(RuntimeEnvironment.application, PurchaseType.INAPP, Collections.singletonList(TEST_SKU))
-                .subscribe(subscriber);
+        new ProductDetailsSingle(testActivity, PurchaseType.INAPP, Collections.singletonList(TEST_SKU)).subscribe(subscriber);
         subscriber.assertError(BillingException.class);
     }
 

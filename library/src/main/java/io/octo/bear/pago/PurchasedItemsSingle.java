@@ -1,6 +1,6 @@
 package io.octo.bear.pago;
 
-import android.content.Context;
+import android.app.Activity;
 import android.os.Bundle;
 
 import java.util.ArrayList;
@@ -28,12 +28,12 @@ class PurchasedItemsSingle extends Single<List<Order>> {
     static final String RESPONSE_INAPP_PURCHASE_SIGNATURE_LIST = "INAPP_DATA_SIGNATURE_LIST";
     static final String RESPONSE_INAPP_CONTINUATION_TOKEN = "INAPP_CONTINUATION_TOKEN";
 
-    PurchasedItemsSingle(final Context context, final PurchaseType type) {
+    PurchasedItemsSingle(final Activity activity, final PurchaseType type) {
         super(subscriber ->
-                new BillingServiceConnection(context, service -> {
+                new BillingServiceConnection(activity, service -> {
                     try {
                         final Bundle purchases =
-                                service.getPurchases(Pago.BILLING_API_VERSION, context.getPackageName(), type.value, null);
+                                service.getPurchases(Pago.BILLING_API_VERSION, activity.getPackageName(), type.value, null);
 
                         final ResponseCode code = retrieveResponseCode(purchases);
 

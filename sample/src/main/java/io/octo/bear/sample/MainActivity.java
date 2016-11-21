@@ -3,7 +3,6 @@ package io.octo.bear.sample;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.Button;
 
 import butterknife.BindView;
@@ -41,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        final Pago pago = new Pago(getApplicationContext());
+        final Pago pago = new Pago(this);
 
         purchased.setOnClickListener(view ->
                 pago.purchaseProduct(ITEM_PURCHASED, "some_payload")
