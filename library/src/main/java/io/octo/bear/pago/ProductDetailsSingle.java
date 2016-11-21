@@ -1,6 +1,6 @@
 package io.octo.bear.pago;
 
-import android.content.Context;
+import android.app.Activity;
 import android.os.Bundle;
 import android.os.RemoteException;
 
@@ -27,13 +27,13 @@ class ProductDetailsSingle extends Single<Inventory> {
     static final String RESPONSE_DETAILS_LIST = "DETAILS_LIST";
     static final String EXTRA_ITEM_ID_LIST = "ITEM_ID_LIST";
 
-    ProductDetailsSingle(final Context context, final PurchaseType type, final List<String> purchaseIds) {
-        super(subscriber -> new BillingServiceConnection(context, service -> {
+    ProductDetailsSingle(final Activity activity, final PurchaseType type, final List<String> purchaseIds) {
+        super(subscriber -> new BillingServiceConnection(activity, service -> {
                     try {
                         final Bundle querySku = new Bundle();
                         querySku.putStringArrayList(EXTRA_ITEM_ID_LIST, new ArrayList<>(purchaseIds));
 
-                        final Bundle details = service.getSkuDetails(Pago.BILLING_API_VERSION, context.getPackageName(), type.value, querySku);
+                        final Bundle details = service.getSkuDetails(Pago.BILLING_API_VERSION, activity.getPackageName(), type.value, querySku);
                         final ResponseCode responseCode = retrieveResponseCode(details);
 
                         checkResponseAndThrowIfError(responseCode);

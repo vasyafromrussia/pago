@@ -1,5 +1,6 @@
 package io.octo.bear.pago;
 
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -31,10 +32,10 @@ class PerformPurchaseSingle extends Single<Order> {
     static final String RESPONSE_INAPP_PURCHASE_DATA = "INAPP_PURCHASE_DATA";
     static final String RESPONSE_INAPP_DATA_SIGNATURE = "INAPP_DATA_SIGNATURE";
 
-    PerformPurchaseSingle(final Context context, final PurchaseType type, final String sku, String payload) {
-        super(subscriber -> new BillingServiceConnection(context, service -> {
+    PerformPurchaseSingle(final Activity activity, final PurchaseType type, final String sku, String payload) {
+        super(subscriber -> new BillingServiceConnection(activity, service -> {
                     try {
-                        final Bundle buyIntentBundle = service.getBuyIntent(Pago.BILLING_API_VERSION, context.getPackageName(),
+                        final Bundle buyIntentBundle = service.getBuyIntent(Pago.BILLING_API_VERSION, activity.getPackageName(),
                                 sku, type.value, payload);
 
                         final ResponseCode responseCode = retrieveResponseCode(buyIntentBundle);
@@ -47,12 +48,12 @@ class PerformPurchaseSingle extends Single<Order> {
                         }
 
                         LocalBroadcastManager
-                                .getInstance(context)
+                                .getInstance(activity)
                                 .registerReceiver(
                                         createPurchaseBroadcastReceiver(payload, subscriber),
                                         new IntentFilter(BillingActivity.ACTION_PURCHASE));
 
-                        BillingActivity.start(context, buyIntent);
+                        BillingActivity.start(activity, buyIntent);
                     } catch (BillingException e) {
                         subscriber.onError(e);
                     }

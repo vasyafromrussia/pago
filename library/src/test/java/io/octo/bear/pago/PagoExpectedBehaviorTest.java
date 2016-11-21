@@ -6,6 +6,7 @@ import android.os.Build;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
@@ -21,11 +22,11 @@ import io.octo.bear.pago.model.entity.PurchaseType;
 import io.octo.bear.pago.model.entity.ResponseCode;
 import rx.observers.TestSubscriber;
 
-import static io.octo.bear.pago.BillingServiceUtils.RESPONSE_CODE;
 import static io.octo.bear.pago.BillingServiceTestingUtils.PURCHASED_ITEM_COUNT;
 import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_DEVELOPER_PAYLOAD;
 import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_PURCHASE_TOKEN;
 import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_SKU;
+import static io.octo.bear.pago.BillingServiceUtils.RESPONSE_CODE;
 import static io.octo.bear.pago.PerformPurchaseSingle.RESPONSE_INAPP_DATA_SIGNATURE;
 import static io.octo.bear.pago.PerformPurchaseSingle.RESPONSE_INAPP_PURCHASE_DATA;
 import static org.junit.Assert.assertEquals;
@@ -52,17 +53,19 @@ public class PagoExpectedBehaviorTest extends BasePagoTest {
 
     @Test
     public void testPurchasesAvailabilitySingle() {
+        TestActivity testActivity = Robolectric.buildActivity(TestActivity.class).create().get();
         final TestSubscriber<Boolean> subscriber = new TestSubscriber<>();
-        new BillingAvailabilitySingle(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
+        new BillingAvailabilitySingle(testActivity, PurchaseType.INAPP).subscribe(subscriber);
         subscriber.assertNoErrors();
         subscriber.assertValue(true);
     }
 
     @Test
     public void testObtainProductDetailsSingle() {
+        TestActivity testActivity = Robolectric.buildActivity(TestActivity.class).create().get();
         final TestSubscriber<Inventory> subscriber = new TestSubscriber<>();
         final String productId = TEST_SKU;
-        new ProductDetailsSingle(RuntimeEnvironment.application, PurchaseType.INAPP, Collections.singletonList(productId))
+        new ProductDetailsSingle(testActivity, PurchaseType.INAPP, Collections.singletonList(productId))
                 .subscribe(subscriber);
         subscriber.assertNoErrors();
         subscriber.assertValueCount(1);
@@ -72,12 +75,14 @@ public class PagoExpectedBehaviorTest extends BasePagoTest {
 
     @Test
     public void testPurchaseProductSingle() throws IntentSender.SendIntentException, InterruptedException {
+        TestActivity testActivity = Robolectric.buildActivity(TestActivity.class).create().get();
+
         final ShadowActivity shadowActivity = new ShadowActivity();
 
         //start purchase flow
         final TestSubscriber<Order> subscriber = new TestSubscriber<>();
         final PerformPurchaseSingle performPurchaseSingle = new PerformPurchaseSingle(
-                RuntimeEnvironment.application,
+                testActivity,
                 PurchaseType.INAPP,
                 TEST_SKU,
                 TEST_DEVELOPER_PAYLOAD
@@ -100,16 +105,18 @@ public class PagoExpectedBehaviorTest extends BasePagoTest {
 
     @Test
     public void testConsumptionSingle() {
+        TestActivity testActivity = Robolectric.buildActivity(TestActivity.class).create().get();
         final TestSubscriber<Void> subscriber = new TestSubscriber<>();
-        new ConsumePurchaseCompletable(RuntimeEnvironment.application, TEST_PURCHASE_TOKEN).subscribe(subscriber);
+        new ConsumePurchaseCompletable(testActivity, TEST_PURCHASE_TOKEN).subscribe(subscriber);
         subscriber.assertNoErrors();
         subscriber.assertCompleted();
     }
 
     @Test
     public void testObtainPurchasedProductsListSingle() {
+        TestActivity testActivity = Robolectric.buildActivity(TestActivity.class).create().get();
         final TestSubscriber<List<Order>> subscriber = new TestSubscriber<>();
-        new PurchasedItemsSingle(RuntimeEnvironment.application, PurchaseType.INAPP).subscribe(subscriber);
+        new PurchasedItemsSingle(testActivity, PurchaseType.INAPP).subscribe(subscriber);
         subscriber.assertNoErrors();
         final List<Order> orders = subscriber.getOnNextEvents().get(0);
         assertNotNull(orders);
@@ -117,10 +124,11 @@ public class PagoExpectedBehaviorTest extends BasePagoTest {
     }
 
     private static Intent createPurchaseResultBundle() {
+        TestActivity testActivity = Robolectric.buildActivity(TestActivity.class).create().get();
         return new Intent()
                 .putExtra(RESPONSE_CODE, ResponseCode.OK.code)
                 .putExtra(RESPONSE_INAPP_PURCHASE_DATA, String.format(BUY_INTENT_RESPONSE,
-                        RuntimeEnvironment.application.getPackageName(),
+                        testActivity.getPackageName(),
                         TEST_SKU,
                         TEST_DEVELOPER_PAYLOAD))
                 .putExtra(RESPONSE_INAPP_DATA_SIGNATURE, new Random().nextInt());
