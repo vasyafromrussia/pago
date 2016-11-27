@@ -32,7 +32,7 @@ class PerformPurchaseSingle extends Single<Order> {
     static final String RESPONSE_INAPP_DATA_SIGNATURE = "INAPP_DATA_SIGNATURE";
 
     PerformPurchaseSingle(final Context context, final PurchaseType type, final String sku, String payload) {
-        super(subscriber -> new BillingServiceConnection(context, service -> {
+        super((OnSubscribe<Order>) subscriber -> new BillingServiceConnection(context, service -> {
                     try {
                         final Bundle buyIntentBundle = service.getBuyIntent(Pago.BILLING_API_VERSION, context.getPackageName(),
                                 sku, type.value, payload);

@@ -28,7 +28,7 @@ class ProductDetailsSingle extends Single<Inventory> {
     static final String EXTRA_ITEM_ID_LIST = "ITEM_ID_LIST";
 
     ProductDetailsSingle(final Context context, final PurchaseType type, final List<String> purchaseIds) {
-        super(subscriber -> new BillingServiceConnection(context, service -> {
+        super((OnSubscribe<Inventory>) subscriber -> new BillingServiceConnection(context, service -> {
                     try {
                         final Bundle querySku = new Bundle();
                         querySku.putStringArrayList(EXTRA_ITEM_ID_LIST, new ArrayList<>(purchaseIds));

@@ -29,7 +29,7 @@ class PurchasedItemsSingle extends Single<List<Order>> {
     static final String RESPONSE_INAPP_CONTINUATION_TOKEN = "INAPP_CONTINUATION_TOKEN";
 
     PurchasedItemsSingle(final Context context, final PurchaseType type) {
-        super(subscriber ->
+        super((OnSubscribe<List<Order>>) subscriber ->
                 new BillingServiceConnection(context, service -> {
                     try {
                         final Bundle purchases =

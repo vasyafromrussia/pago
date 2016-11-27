@@ -24,6 +24,7 @@ import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_PURCHASE_TOKEN;
 import static io.octo.bear.pago.BillingServiceTestingUtils.TEST_SKU;
 import static io.octo.bear.pago.BillingServiceTestingUtils.createBuyIntentResponseBundle;
 import static io.octo.bear.pago.BillingServiceTestingUtils.createProductDetailsRequestBundle;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
@@ -70,7 +71,7 @@ public class ShadowIInAppBillingServiceStub {
                         eq(Pago.BILLING_API_VERSION),
                         eq(PagoExpectedBehaviorTest.PACKAGE_NAME),
                         eq(type.value),
-                        anyString());
+                        nullable(String.class));
     }
 
     private static void setupConsumptionResponse(IInAppBillingService service) throws RemoteException {
