@@ -14,7 +14,7 @@ import rx.Single;
 class BillingAvailabilitySingle extends Single<Boolean> {
 
     BillingAvailabilitySingle(final Context context, final PurchaseType type) {
-        super(subscriber -> new BillingServiceConnection(context, service -> {
+        super((OnSubscribe<Boolean>) subscriber -> new BillingServiceConnection(context, service -> {
                     try {
                         final int codeNumber = service.isBillingSupported(Pago.BILLING_API_VERSION, context.getPackageName(), type.value);
                         final ResponseCode code = ResponseCode.getByCode(codeNumber);

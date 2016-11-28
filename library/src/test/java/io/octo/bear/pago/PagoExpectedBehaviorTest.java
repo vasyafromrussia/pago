@@ -6,7 +6,7 @@ import android.os.Build;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricGradleTestRunner;
+import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowActivity;
@@ -36,7 +36,7 @@ import static org.junit.Assert.assertNotNull;
  *
  * Test set for {@link com.android.vending.billing.IInAppBillingService} expected responses.
  */
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(RobolectricTestRunner.class)
 @Config(
         constants = BuildConfig.class,
         sdk = Build.VERSION_CODES.LOLLIPOP,

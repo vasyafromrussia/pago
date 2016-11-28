@@ -14,7 +14,7 @@ import java.util.Set;
  * So this matcher is needed to use Bundles with Mockito mocks.
  */
 
-class BundleMatcher extends ArgumentMatcher<Bundle> {
+class BundleMatcher implements ArgumentMatcher<Bundle> {
 
     private final Bundle value;
 
@@ -23,8 +23,8 @@ class BundleMatcher extends ArgumentMatcher<Bundle> {
     }
 
     @Override
-    public boolean matches(Object argument) {
-        return argument instanceof Bundle && equalBundles((Bundle) argument, value);
+    public boolean matches(Bundle argument) {
+        return argument != null && equalBundles(argument, value);
     }
 
     private static boolean equalBundles(Bundle one, Bundle two) {
