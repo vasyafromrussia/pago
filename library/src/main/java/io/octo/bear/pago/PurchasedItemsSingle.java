@@ -42,12 +42,19 @@ class PurchasedItemsSingle extends Single<List<Order>> {
                         final List<String> data = purchases.getStringArrayList(RESPONSE_INAPP_PURCHASE_DATA_LIST);
                         final List<String> signatures = purchases.getStringArrayList(RESPONSE_INAPP_PURCHASE_SIGNATURE_LIST);
 
-                        final List<Order> result = new ArrayList<>();
-                        for (int i = 0; i < data.size(); i++) {
-                            String originalJson = data.get(i);
-                            result.add(new Order(GSON.fromJson(originalJson, Purchase.class), signatures.get(i), originalJson));
+                        if (data != null && signatures != null) {
+
+                            final List<Order> result = new ArrayList<>();
+                            for (int i = 0; i < data.size(); i++) {
+                                String originalJson = data.get(i);
+                                result.add(new Order(GSON.fromJson(originalJson, Purchase.class), signatures.get(i), originalJson));
+                            }
+                            subscriber.onSuccess(result);
+
+                        } else {
+                            subscriber.onError(new NullPointerException((data == null) ? "data is null" : "signatures is null"));
                         }
-                        subscriber.onSuccess(result);
+
                     } catch (BillingException e) {
                         subscriber.onError(e);
                     }
