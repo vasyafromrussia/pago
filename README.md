@@ -35,7 +35,7 @@ dependencies {
 License
 =======
 
-    Copyright 2016 Vasily Styagov, Renat Sarymsakov, Denis Volyntsev, Dmitry Mozgin.
+    Copyright 2016 Vasily Styagov.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
