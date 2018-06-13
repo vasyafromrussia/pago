@@ -68,7 +68,7 @@ public class BillingActivity extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_CODE) {
+        if (requestCode == REQUEST_CODE && data != null) {
             data.setAction(ACTION_PURCHASE);
             data.putExtra(EXTRA_SUCCESS, resultCode == RESULT_OK);
             LocalBroadcastManager.getInstance(this).sendBroadcast(data);
